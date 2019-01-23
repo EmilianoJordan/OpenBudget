@@ -5,7 +5,7 @@ Author: Emiliano Jordan,
         https://www.linkedin.com/in/emilianojordan/,
         Most other things I"m @emilianojordan
 """
-__package__ = "budgeting"
+__package__ = "openbudget"
 __version__ = "0.0.1"
 __author__ = "Emiliano Jordan"
 __email__ = "emiliano.jordan@gmail.com"

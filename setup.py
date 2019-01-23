@@ -47,8 +47,12 @@ setup(
     ],
     install_requires=[
         'flask==1.*',
-        'Flask-GraphQL-Auth==1.*',
-        'graphene==2.*',
+        'flask-sqlalchemy==2.*',
+        'psycopg2==2.*',
+        'flask-migrate==2.*',
+        'flask_sslify',
+        'flask_login',
+        'click'
     ],
     extras_require={
         'testing': [
