@@ -117,3 +117,5 @@ dmypy.json
 
 # Jetbrains IDE
 .idea/
+# Config Ignore
+*.cfg
