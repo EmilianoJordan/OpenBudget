@@ -5,15 +5,11 @@ Author: Emiliano Jordan,
         https://www.linkedin.com/in/emilianojordan/,
         Most other things I'm @emilianojordan
 """
-from flask import Flask
+import os
 
-app = Flask(__name__)
+from flask_migrate import Migrate
 
+from .app import create_app, db
 
-@app.route('/')
-def index():
-    return "Hello, World!"
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
+app = create_app(os.getenv('FLASK_CONFIG') or 'default')
+migrate = Migrate(app, db)

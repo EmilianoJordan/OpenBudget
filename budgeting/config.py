@@ -17,7 +17,7 @@ class BaseConfig:
     SQLALCHEMY_DATABASE_URI = (
             os.environ.get('DEV_DATABASE_URL')
             or 'sqlite:///' + os.path.join(basedir, 'base_db.sqlite'))
-
+    OB_PASS_EXPIRES = 600
     @classmethod
     def init_app(cls, app):
         """

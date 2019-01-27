@@ -53,7 +53,9 @@ setup(
         'flask_sslify',
         'flask_login',
         # 'click'
-        'flask-restful'
+        'flask-restful',
+        'passlib==1.*',
+        'flask_httpauth==3.*'
     ],
     extras_require={
         'testing': [

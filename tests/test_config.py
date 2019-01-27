@@ -16,7 +16,7 @@ class TestBaseConfig:
     def setup_class(self):
         self.app = create_app('base')
 
-    def test_setup(self):
+    def test_app_is_base_config(self):
         assert self.app.env == 'production'
         assert not self.app.config['DEBUG']
         assert not self.app.config['TESTING']
@@ -29,7 +29,7 @@ class TestDevConfig:
     def setup_class(self):
         self.app = create_app('dev')
 
-    def test_setup(self):
+    def test_app_is_development_config(self):
         assert self.app.env == 'development'
         assert self.app.config['DEBUG']
         assert not self.app.config['TESTING']
@@ -42,7 +42,7 @@ class TestTestConfig:
     def setup_class(self):
         self.app = create_app('test')
 
-    def test_setup(self):
+    def test_app_is_test_config(self):
         assert self.app.env == 'development'
         assert self.app.config['DEBUG']
         assert self.app.config['TESTING']
