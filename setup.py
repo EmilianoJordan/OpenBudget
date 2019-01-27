@@ -52,11 +52,13 @@ setup(
         'flask-migrate==2.*',
         'flask_sslify',
         'flask_login',
-        'click'
+        # 'click'
+        'flask-restful'
     ],
     extras_require={
         'testing': [
             'requests==2.*',
+            'pytest==4.*'
         ]
     }
 )
