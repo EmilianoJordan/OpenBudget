@@ -1,17 +1,9 @@
-"""
-Created: 1/14/2019
-Author: Emiliano Jordan,
-        https://github.com/EmilianoJordan
-        https://www.linkedin.com/in/emilianojordan/,
-        Most other things I'm @emilianojordan
-"""
 import os
 from setuptools import find_packages, setup
 
 '''
 The "here" and "about" and classifiers are directly borrowed from 
-Kenneth Reitz I'm always browsing around his GitHub to see how he's 
-doing things. https://github.com/kennethreitz/
+Kenneth Reitz. https://github.com/kennethreitz/
 '''
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -27,8 +19,8 @@ setup(
                  "also somewhat leery of sending personal info to apps "
                  "like Personal Capital or Mint. I'd like to create a "
                  "stand alone web app to run locally on my computer. "
-                 "I'd like to explore GraphQL, Flask and better "
-                 "testing of my code. "),
+                 "I'd like to explore Flask and better testing of my "
+                 "code. "),
     author=about["__author__"],
     author_email=about["__email__"],
     url="https://github.com/EmilianoJordan/BudgetingInPython",
@@ -54,13 +46,14 @@ setup(
         'flask_login',
         # 'click'
         'flask-restful',
-        'passlib==1.*',
         'flask_httpauth==3.*'
     ],
     extras_require={
         'testing': [
             'requests==2.*',
-            'pytest==4.*'
+            'pytest==4.*',
+            'pytest-flask==0.*',
+            'faker==1.*'
         ]
     }
 )

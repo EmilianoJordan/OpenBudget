@@ -1,20 +1,17 @@
-"""
-Created: 1/26/2019
-Author: Emiliano Jordan,
-        https://github.com/EmilianoJordan
-        https://www.linkedin.com/in/emilianojordan/,
-        Most other things I'm @emilianojordan
-"""
-from flask import g
+from flask import g, request, jsonify
 from flask_httpauth import HTTPBasicAuth
 
-from ....models import User
+from budgeting.models import User
+
+from . import api_bp
+from .errors import unauthorized, forbidden
 
 auth = HTTPBasicAuth()
 
 
 @auth.verify_password
 def verify_password(email_or_token: str = None, password: str = None):
+
     if not email_or_token:
         return False
 
@@ -31,3 +28,20 @@ def verify_password(email_or_token: str = None, password: str = None):
     g.current_user = user
     g.tokens_used = False
     return user.verify_password(password)
+
+
+@api_bp.route('/tokens', methods=['POST'])
+def get_token():
+    if g.token_used:
+        return unauthorized('Invalid Credentials')
+    return jsonify({
+        'token': g.current_user.generate_auth_token(expiration=3600),
+        'expiration': 3600
+    })
+
+
+@api_bp.before_request
+@auth.login_required
+def before_request():
+    if not g.current_user.confirmed:
+        return forbidden('Unconfirmed account')

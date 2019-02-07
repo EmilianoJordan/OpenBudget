@@ -14,10 +14,13 @@ class BaseConfig:
     SQLALCHEMY_RECORD_QUERIES = False
     DEBUG = False
     TESTING = False
+    OB_PASS_REQUIRED = True
     SQLALCHEMY_DATABASE_URI = (
             os.environ.get('DEV_DATABASE_URL')
             or 'sqlite:///' + os.path.join(basedir, 'base_db.sqlite'))
     OB_PASS_EXPIRES = 600
+
+
     @classmethod
     def init_app(cls, app):
         """
@@ -59,6 +62,8 @@ class DevConfig(BaseConfig):
     SQLALCHEMY_RECORD_QUERIES = True
     DEBUG = True
     TESTING = False
+    OB_PASS_REQUIRED = False
+    OB_ROOT_URL = 'http://127.0.0.1:5000/'
     SQLALCHEMY_DATABASE_URI = ('sqlite:///' + os.path.join(basedir, 'dev_db.sqlite'))
 
 
@@ -69,6 +74,7 @@ class TestConfig(BaseConfig):
     DEBUG = True
     TESTING = True
     SQLALCHEMY_DATABASE_URI = ('sqlite:///' + os.path.join(basedir, 'test_db.sqlite'))
+    OB_ROOT_URL = 'http://127.0.0.1:5000/'
 
 
 config = {
