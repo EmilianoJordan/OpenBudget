@@ -13,9 +13,7 @@ from budgeting.app import db
 from .errors import bad_request
 
 
-@api_bp.route('/')
-def home_page():
-    return request.url_root
+
 
 
 @api_bp.route('/users/<int:id>', methods=['GET'])

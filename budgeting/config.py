@@ -74,6 +74,7 @@ class TestConfig(BaseConfig):
     DEBUG = True
     TESTING = True
     SQLALCHEMY_DATABASE_URI = ('sqlite:///' + os.path.join(basedir, 'test_db.sqlite'))
+    SQLALCHEMY_DATABASE_URI = None
     OB_ROOT_URL = 'http://127.0.0.1:5000/'
 
 

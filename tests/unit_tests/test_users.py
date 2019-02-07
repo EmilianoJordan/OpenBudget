@@ -6,6 +6,7 @@ Author: Emiliano Jordan,
         Most other things I'm @emilianojordan
 """
 import pytest
+from sqlalchemy.exc import IntegrityError
 
 from budgeting.models import User
 
@@ -27,9 +28,32 @@ class TestUserModel:
 
         assert u1.verify_password(u['password'])
 
-    def test_user_db(self, db):
+    def test_user_db_insert(self, db):
+        """
+        Verify that the user is being properly inserted into the db.
+        :param db:
+        :type db:
+        :return:
+        :rtype:
+        """
+        u = fake.ob_user()
+        u1 = User(**u)
+        assert u1.id is None
+        db.session.add(u1)
+        db.session.commit()
+        assert isinstance(u1.id, int)
+
+    def test_user_db_uniqueness(self, db):
         u = fake.ob_user()
         u1 = User(**u)
         db.session.add(u1)
         db.session.commit()
-        print(u1.id)
+
+        u2 = User(**u)
+        db.session.add(u2)
+
+        with pytest.raises(IntegrityError):
+            db.session.commit()
+
+        db.session.rollback()
+        db.session.commit()

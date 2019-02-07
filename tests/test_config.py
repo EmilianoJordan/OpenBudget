@@ -48,4 +48,4 @@ class TestTestConfig:
         assert self.app.config['TESTING']
         assert self.app.config['SECRET_KEY']
         assert isinstance(self.app.config['SECRET_KEY'], bytes)
-        assert Path(self.app.config['SQLALCHEMY_DATABASE_URI']).name == 'test_db.sqlite'
+        assert self.app.config['SQLALCHEMY_DATABASE_URI'] is None

@@ -13,3 +13,8 @@ api = Api(api_bp)
 
 from .auth import auth
 from . import users, errors
+
+
+@api_bp.route('/')
+def home_page():
+    return {'hello':'world'}

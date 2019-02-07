@@ -18,7 +18,11 @@ def app():
 
 
 @pytest.fixture(scope='session')
-def db(app):
+def db(app, tmpdir_factory):
+    app.config['SQLALCHEMY_DATABASE_URI'] = (
+            'sqlite:///'
+            + str(tmpdir_factory.getbasetemp().join('test_db.sqlite'))
+    )
     database.create_all()
     yield database
     database.drop_all()
