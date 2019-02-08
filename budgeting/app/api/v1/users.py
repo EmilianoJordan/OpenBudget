@@ -5,17 +5,20 @@ Author: Emiliano Jordan,
         https://www.linkedin.com/in/emilianojordan/,
         Most other things I'm @emilianojordan
 """
-from flask import jsonify, request, url_for
+from flask import jsonify, request, url_for, g
 
 from budgeting.models import User
 from budgeting.app.api.v1 import api_bp
 from budgeting.app import db
-from .errors import bad_request
+from .errors import bad_request, not_found
 
 
 @api_bp.route('/users/<int:id>', methods=['GET'])
 def get_user(id):
-    return jsonify(User.query.get_or_404(id).to_dict())
+    user = User.query.get_or_404(id)
+    if g.current_user == user:
+        return jsonify(user.to_dict())
+    return not_found()
 
 
 @api_bp.route('/users', methods=['POST'])
@@ -34,7 +37,7 @@ def create_user():
     db.session.commit()
     response = jsonify(user.to_dict())
     response.status_code = 201
-    response.headers['Location'] = url_for('apiv1.get_user', id=user.id)
+    response.headers['Location'] = url_for('api.get_user', id=user.id)
     return response
 
 

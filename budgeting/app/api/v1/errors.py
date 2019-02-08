@@ -28,3 +28,9 @@ def unauthorized(message):
 
 def forbidden(message):
     return _error_response(403, message)
+
+
+def not_found(message=None):
+    if message is None:
+        message = 'Page Not Found'
+    return _error_response(404, message)
