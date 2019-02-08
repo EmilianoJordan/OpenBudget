@@ -5,7 +5,7 @@ Author: Emiliano Jordan,
         https://www.linkedin.com/in/emilianojordan/,
         Most other things I'm @emilianojordan
 """
-from flask import Blueprint
+from flask import Blueprint, jsonify
 from flask_restful import Api
 
 api_bp = Blueprint('apiv1', __name__)
@@ -17,4 +17,4 @@ from . import users, errors
 
 @api_bp.route('/')
 def home_page():
-    return {'hello':'world'}
+    return jsonify({'hello':'world'})

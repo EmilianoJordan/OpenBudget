@@ -13,9 +13,6 @@ from budgeting.app import db
 from .errors import bad_request
 
 
-
-
-
 @api_bp.route('/users/<int:id>', methods=['GET'])
 def get_user(id):
     return jsonify(User.query.get_or_404(id).to_dict())

@@ -8,6 +8,9 @@ Author: Emiliano Jordan,
 import pytest
 
 from budgeting.app import create_app, db as database
+from budgeting.models import User
+
+from tests.helpers import fake
 
 
 @pytest.fixture(scope='session')
@@ -28,4 +31,16 @@ def db(app, tmpdir_factory):
     database.drop_all()
 
 
+@pytest.fixture(scope='session')
+def client(app):
+    return app.test_client()
 
+
+@pytest.fixture(scope='class')
+def user(db):
+    user = fake.ob_user()
+    user_model = User(**user)
+    user_model.confirmed = True
+    db.session.add(user_model)
+    db.session.commit()
+    return user
