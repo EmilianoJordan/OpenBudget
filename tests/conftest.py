@@ -9,6 +9,8 @@ import pytest
 from base64 import b64encode
 from budgeting.app import create_app, db as database
 from budgeting.models import User
+from budgeting.models.permissions import BasicUserRoles
+import json
 
 from tests.helpers import fake
 
@@ -42,26 +44,39 @@ def user(user_generator):
 
 
 @pytest.fixture(scope='class')
+def employee(user_generator):
+    return user_generator(1, permissions=BasicUserRoles.EMPLOYEE)[0]
+
+
+@pytest.fixture(scope='class')
+def employee_admin(user_generator):
+    return user_generator(1, permissions=BasicUserRoles.EMPLOYEE_SUPER_ADMIN)[0]
+
+
+@pytest.fixture(scope='class')
 def user_generator(db):
 
-    _user_list = []
+    _user_dict = {}
 
-    def _create_users(num, confirmed=True):
+    def _create_users(num, confirmed=True, permissions=BasicUserRoles.USER):
 
-        while len(_user_list) < num:
+        key = json.dumps(permissions)
+
+        while len(_user_dict.setdefault(key, [])) < num:
             user = fake.ob_user()
+            user['permissions'] = permissions
             user_model = User(**user)
             user_model.confirmed = confirmed
             db.session.add(user_model)
             db.session.commit()
-            _user_list.append(user)
+            _user_dict.setdefault(key, []).append(user)
 
-        return _user_list[:num]
+        return _user_dict[key][:num]
 
     yield _create_users
 
-    for user in _user_list:
-        db.session.query(User).filter(User.email.in_([x['email'] for x in _user_list]))
+    for k in _user_dict:
+        db.session.query(User).filter(User.email.in_([x['email'] for x in _user_dict[k]]))
 
 
 @pytest.fixture(scope='session')

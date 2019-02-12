@@ -5,14 +5,17 @@ Author: Emiliano Jordan,
         https://www.linkedin.com/in/emilianojordan/,
         Most other things I'm @emilianojordan
 """
+import json
 import pytest
 from sqlalchemy.exc import IntegrityError
 
 from budgeting.models import User
+from budgeting.models.permissions import BasicUserRoles, UserPermissions
+
 
 from tests.helpers import fake
 
-
+@pytest.mark.user
 class TestUserModel:
 
     def test_user_initialization(self):
@@ -57,3 +60,41 @@ class TestUserModel:
 
         db.session.rollback()
         db.session.commit()
+
+    def test_user_is_user(self, user):
+        assert user['permissions'] == BasicUserRoles.USER
+        u: User = User.query.filter_by(email=user['email']).one()
+        assert json.loads(u._permissions) == BasicUserRoles.USER
+
+        for p in BasicUserRoles.USER:
+            assert u.has_permission(p)
+
+        assert not u.has_permission(UserPermissions.EMPLOYEE)
+        assert not u.has_permission(UserPermissions.EMPLOYEE_ADMIN)
+
+        assert not u.employee
+        assert not u.employee_admin
+
+    def test_employee_is_employee(self, employee):
+        assert employee['permissions'] == BasicUserRoles.EMPLOYEE
+        u = User.query.filter_by(email=employee['email']).one()
+        assert json.loads(u._permissions) == BasicUserRoles.EMPLOYEE
+
+        for p in BasicUserRoles.EMPLOYEE:
+            assert u.has_permission(p)
+
+        assert not u.has_permission(UserPermissions.EMPLOYEE_ADMIN)
+
+        assert u.employee
+        assert not u.employee_admin
+
+    def test_employee_admin_is_employee_admin(self, employee_admin):
+        assert employee_admin['permissions'] == BasicUserRoles.EMPLOYEE_SUPER_ADMIN
+        u = User.query.filter_by(email=employee_admin['email']).one()
+        assert json.loads(u._permissions) == BasicUserRoles.EMPLOYEE_SUPER_ADMIN
+
+        for p in BasicUserRoles.EMPLOYEE_SUPER_ADMIN:
+            assert u.has_permission(p)
+
+        assert u.employee
+        assert u.employee_admin

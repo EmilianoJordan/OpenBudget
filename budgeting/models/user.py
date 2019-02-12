@@ -5,12 +5,17 @@ Author: Emiliano Jordan,
         https://www.linkedin.com/in/emilianojordan/,
         Most other things I'm @emilianojordan
 """
+import json
+from typing import List
+
 from flask import current_app
 from itsdangerous import (TimedJSONWebSignatureSerializer
                           as Serializer, BadSignature, SignatureExpired)
+from sqlalchemy import event
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from ..app import db
+from .permissions import BasicUserRoles, UserPermissions
 
 
 class User(db.Model):
@@ -20,17 +25,42 @@ class User(db.Model):
     username = db.Column(db.String(64), unique=True, index=True)
     password_hash = db.Column(db.String(264))
     confirmed = db.Column(db.Boolean, default=False)
+    _permissions = db.Column(db.String, nullable=False)
 
     def __init__(self,
                  username=None,
                  email=None,
                  password=None,
-                 confirmed=False):
+                 confirmed=False,
+                 permissions=BasicUserRoles.USER):
 
         self.username = username
         self.email = email
         self.password = password
         self.confirmed = confirmed
+        self._permissions = json.dumps(permissions)
+
+    @property
+    def employee(self):
+        return UserPermissions.EMPLOYEE in json.loads(self._permissions)
+
+    @property
+    def employee_admin(self):
+        return UserPermissions.EMPLOYEE_ADMIN in json.loads(self._permissions)
+
+    @property
+    def permissions(self):
+        raise AttributeError(f"{type(self).__name__}.permissions is not readable")
+
+    @permissions.setter
+    def permissions(self, v):
+        if not all((isinstance(x, int) for x in v)):
+            raise ValueError(f"{type(self).__name__}.permissions is a list of integer permissions")
+        self._permissions = json.dumps(v)
+
+    @permissions.deleter
+    def permissions(self):
+        raise AttributeError('Cannot delete Permissions, try setting new permissions.')
 
     @property
     def password(self):
@@ -55,6 +85,15 @@ class User(db.Model):
         except (SignatureExpired, BadSignature):
             return None
         return User.query.get(data['id'])
+
+    def has_permission(self, p:int):
+        """
+
+        :param p: A Permission value from .permissions.UserPermissions
+        :type p: int
+        :rtype: bool
+        """
+        return p in json.loads(self._permissions)
 
     def to_dict(self, include_email=False):
         data = {

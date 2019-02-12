@@ -6,10 +6,9 @@ Author: Emiliano Jordan,
         Most other things I'm @emilianojordan
 """
 from flask import jsonify, request, url_for, g
-from flask_restful import Resource, reqparse
+from flask_restful import Resource, reqparse, fields, marshal_with
 
 from budgeting.models import User
-from budgeting.app.api.v1 import api_bp
 from budgeting.app import db
 from .errors import bad_request, not_found
 from . import api
@@ -30,17 +29,52 @@ class UserAPI(Resource):
         pass
 
 
+user_fields = {
+    'id': fields.Integer,
+    'username': fields.String
+}
+user_list = {
+    'page': fields.Integer,
+    'per_page': fields.Integer,
+    'count': fields.Integer,
+    'next': fields.String,
+    'prev': fields.String,
+    'users': fields.List(fields.Nested(user_fields))
+}
+
+
 class UserListAPI(Resource):
 
-    def __init__(self):
+    @marshal_with(user_list)
+    def get(self, page):
+        if not g.current_user.employee and not g.current_user.employee_admin:
+            return not_found()
 
+        users = User.query.paginate(page, 20)
+        return {
+            'page': page,
+            'per_page': 20,
+            'count': users.total,
+            'next': url_for('api.user_list', page=page+1) if users.has_next else False,
+            'prev': url_for('api.user_list', page=page-1) if users.has_next else False,
+            'users': users.items,
+        }
+
+
+class UserPost(Resource):
+
+    def __init__(self):
         self.rparse = reqparse.RequestParser()
-        self.rparse.add_argument('email', type=str, location='json', required=True,
+        self.rparse.add_argument('email', type=str,
                                  help='No Email Provided')
-        self.rparse.add_argument('password', type=str, location='json', required=True,
+        self.rparse.add_argument('password', type=str,
                                  help='No Password Provided')
-        self.rparse.add_argument('username', type=str, location='json', required=True,
+        self.rparse.add_argument('username', type=str,
                                  help='No Username Provided')
+
+    def get(self):
+        r = UserListAPI()
+        return r.get(1)
 
     def post(self):
         data = request.get_json() or {}
@@ -62,4 +96,5 @@ class UserListAPI(Resource):
 
 
 api.add_resource(UserAPI, '/user/<int:id>', endpoint='user')
-api.add_resource(UserListAPI, '/user', endpoint='user_list')
+api.add_resource(UserListAPI, '/users/<int:page>', endpoint='user_list')
+api.add_resource(UserPost, '/user', endpoint='user_post')
