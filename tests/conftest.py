@@ -32,7 +32,7 @@ def db(app, tmpdir_factory):
     yield database
     database.drop_all()
 
-@pytest.fixture(scope='session')
+# @pytest.fixture(scope='session')
 
 
 @pytest.fixture(scope='session')
@@ -69,8 +69,9 @@ def user_generator(db):
             user_model = User(**user)
             user_model.confirmed = confirmed
             db.session.add(user_model)
-            db.session.commit()
             _user_dict.setdefault(key, []).append(user)
+
+        db.session.commit()
 
         return _user_dict[key][:num]
 
