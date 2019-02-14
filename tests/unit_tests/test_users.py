@@ -12,7 +12,6 @@ from sqlalchemy.exc import IntegrityError
 from budgeting.models import User
 from budgeting.models.permissions import BasicUserRoles, UserPermissions
 
-
 from tests.helpers import fake
 
 @pytest.mark.user

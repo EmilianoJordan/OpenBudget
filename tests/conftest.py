@@ -34,7 +34,7 @@ def db(app, tmpdir_factory):
 
 
 @pytest.fixture(scope='session')
-def client(app):
+def client(app, db):
     return app.test_client()
 
 
@@ -55,7 +55,6 @@ def employee_admin(user_generator):
 
 @pytest.fixture(scope='class')
 def user_generator(db):
-
     _user_dict = {}
 
     def _create_users(num, confirmed=True, permissions=BasicUserRoles.USER):
@@ -80,15 +79,21 @@ def user_generator(db):
 
 
 @pytest.fixture(scope='session')
-def get_auth_headers():
+def json_headers():
+    return {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+    }
 
+
+@pytest.fixture(scope='session')
+def get_auth_headers():
     def _gen_auth_headers(user):
-        headers = {
-            'Authorization': 'Basic ' + b64encode(
-                (user['email'] + ':' + user['password']).encode('utf-8')).decode('utf-8'),
+        return {
             'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': ('Basic ' + b64encode(
+                (user['email'] + ':' + user['password']).encode('utf-8')).decode('utf-8'))
         }
-        return headers
 
     return _gen_auth_headers

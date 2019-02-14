@@ -7,6 +7,7 @@ Author: Emiliano Jordan,
 """
 from flask import jsonify, request, url_for, g
 from flask_restful import Resource, reqparse, fields, marshal_with
+from werkzeug.exceptions import BadRequest
 
 from budgeting.models import User
 from budgeting.app import db
@@ -16,7 +17,8 @@ from . import api
 
 class UserAPI(Resource):
 
-    def get(self, id):
+    @staticmethod
+    def get(id):
         user = User.query.get_or_404(id)
         if g.current_user == user:
             return jsonify(user.to_dict())
@@ -55,8 +57,10 @@ class UserListAPI(Resource):
             'page': page,
             'per_page': 20,
             'count': users.total,
-            'next': url_for('api.user_list', page=page+1) if users.has_next else False,
-            'prev': url_for('api.user_list', page=page-1) if users.has_next else False,
+            'next':
+                url_for('api.user_list', page=page+1, _external=True) if users.has_next else '',
+            'prev':
+                url_for('api.user_list', page=page-1, _external=True) if users.has_prev else '',
             'users': users.items,
         }
 
@@ -64,35 +68,34 @@ class UserListAPI(Resource):
 class UserPost(Resource):
 
     def __init__(self):
-        self.rparse = reqparse.RequestParser()
-        self.rparse.add_argument('email', type=str,
-                                 help='No Email Provided')
-        self.rparse.add_argument('password', type=str,
-                                 help='No Password Provided')
-        self.rparse.add_argument('username', type=str,
-                                 help='No Username Provided')
+        self.rparse = reqparse.RequestParser(bundle_errors=True)
+        self.rparse.add_argument('email', type=str, required=True,
+                                 help='No Email Provided.')
+        self.rparse.add_argument('password', type=str, required=True,
+                                 help='No Password Provided.')
+        self.rparse.add_argument('username', type=str, required=True,
+                                 help='No Username Provided.')
 
-    def get(self):
+    @staticmethod
+    def get():
         r = UserListAPI()
         return r.get(1)
 
     def post(self):
-        data = request.get_json() or {}
 
-        if 'username' not in data or 'email' not in data or 'password' not in data:
-            return bad_request('Must include username, email and password.')
+        try:
+            data = self.rparse.parse_args()
+            print(data)
+        except BadRequest as e:
+            bad_request(' '.join([v for k, v in e.data['message'].items()]))
 
         if User.query.filter_by(email=data['email']).first():
-            return bad_request('Bad email. If this is your email address check your inbox.')
+            return {'email': data['email']}, 201
 
-        user = User()
-        user.from_dict(data, new_user=True)
+        user = User(**data)
         db.session.add(user)
         db.session.commit()
-        response = jsonify(user.to_dict())
-        response.status_code = 201
-        response.headers['Location'] = url_for('api.get_user', id=user.id)
-        return response
+        return {'email': user.email}, 201
 
 
 api.add_resource(UserAPI, '/user/<int:id>', endpoint='user')

@@ -1,4 +1,4 @@
-from flask import g, request, jsonify
+from flask import g, url_for, jsonify, request
 from flask_httpauth import HTTPBasicAuth
 
 from budgeting.models import User
@@ -12,6 +12,8 @@ auth = HTTPBasicAuth()
 @auth.verify_password
 def verify_password(email_or_token: str = None, password: str = None):
     if not email_or_token:
+        if url_for('api.user_post') == request.url_rule.rule and 'POST' == request.method:
+            return True
         return False
 
     if not password:
@@ -42,5 +44,8 @@ def get_token():
 @api_bp.before_request
 @auth.login_required
 def before_request():
+    if url_for('api.user_post') == request.url_rule.rule and 'POST' == request.method:
+        return
+
     if not g.current_user.confirmed:
         return forbidden('Unconfirmed account')

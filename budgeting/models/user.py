@@ -8,7 +8,7 @@ Author: Emiliano Jordan,
 import json
 from typing import List
 
-from flask import current_app
+from flask import current_app, url_for
 from itsdangerous import (TimedJSONWebSignatureSerializer
                           as Serializer, BadSignature, SignatureExpired)
 from sqlalchemy import event
@@ -36,7 +36,8 @@ class User(db.Model):
 
         self.username = username
         self.email = email
-        self.password = password
+        if password:
+            self.password = password
         self.confirmed = confirmed
         self._permissions = json.dumps(permissions)
 
@@ -105,9 +106,7 @@ class User(db.Model):
 
         return data
 
-    def from_dict(self, data, new_user=False):
-        for field in ['username', 'email']:
-            if field in data:
-                setattr(self, field, data[field])
-        if new_user and 'password' in data:
-            self.password = data['password']
+    @staticmethod
+    def fake_to_dict(**kwargs):
+        data = {
+        }
