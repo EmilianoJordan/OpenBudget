@@ -74,7 +74,7 @@ class User(db.Model):
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    def generate_auth_token(self, expiration=600):
+    def generate_auth_token(self, expiration=3600):
         s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
         return s.dumps({'id': self.id})
 
@@ -87,7 +87,7 @@ class User(db.Model):
             return None
         return User.query.get(data['id'])
 
-    def has_permission(self, p:int):
+    def has_permission(self, p: int):
         """
 
         :param p: A Permission value from .permissions.UserPermissions
@@ -106,7 +106,8 @@ class User(db.Model):
 
         return data
 
-    @staticmethod
-    def fake_to_dict(**kwargs):
-        data = {
-        }
+    def send_confirm_account_email(self, expiration=86400):
+        pass
+
+    def send_account_exists_email(self):
+        pass

@@ -18,16 +18,16 @@ from . import api
 class UserAPI(Resource):
 
     @staticmethod
-    def get(id):
-        user = User.query.get_or_404(id)
+    def get(u_id):
+        user = User.query.get_or_404(u_id)
         if g.current_user == user:
             return jsonify(user.to_dict())
         return not_found()
 
-    def put(self, id):
+    def put(self, u_id):
         pass
 
-    def delete(self, id):
+    def delete(self, u_id):
         pass
 
 
@@ -97,6 +97,21 @@ class UserPost(Resource):
         return {'email': user.email}, 201
 
 
-api.add_resource(UserAPI, '/user/<int:id>', endpoint='user')
+class UserVerify(Resource):
+
+    def get(self, u_id, code):
+        user: User = User.verify_auth_token(code)
+
+        if user is None:
+            bad_request("User Token Expired.")
+
+        if user.id != u_id:
+            bad_request("Invalid User Token")
+
+        return
+
+
+api.add_resource(UserAPI, '/user/<int:u_id>', endpoint='user')
+api.add_resource(UserVerify, '/user/<int:u_id>/verify/<code>', endpoint='user_verify')
 api.add_resource(UserListAPI, '/users/<int:page>', endpoint='user_list')
 api.add_resource(UserPost, '/user', endpoint='user_post')

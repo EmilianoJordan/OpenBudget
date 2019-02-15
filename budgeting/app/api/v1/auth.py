@@ -47,5 +47,8 @@ def before_request():
     if url_for('api.user_post') == request.url_rule.rule and 'POST' == request.method:
         return
 
+    if url_for('api.user_verify') == request.url_rule.rule and 'GET' == request.method:
+        return
+
     if not g.current_user.confirmed:
         return forbidden('Unconfirmed account')

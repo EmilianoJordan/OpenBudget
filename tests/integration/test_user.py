@@ -25,7 +25,7 @@ class TestUser:
         """
         u = User.query.filter_by(email=user['email']).one()
         r = client.get(
-            url_for('api.user', id=u.id, _external=False),
+            url_for('api.user', u_id=u.id, _external=False),
             headers=get_auth_headers(user)
         )
 
@@ -41,7 +41,7 @@ class TestUser:
         u = User.query.filter_by(email=u1['email']).one()
 
         r = client.get(
-            url_for('api.user', id=u.id, _external=False),
+            url_for('api.user', u_id=u.id, _external=False),
             headers=get_auth_headers(u2)
         )
 
