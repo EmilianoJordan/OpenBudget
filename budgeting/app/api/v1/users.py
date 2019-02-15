@@ -85,6 +85,7 @@ class UserPost(Resource):
 
         try:
             data = self.rparse.parse_args()
+            print(data)
         except BadRequest as e:
             bad_request(' '.join([v for k, v in e.data['message'].items()]))
 
