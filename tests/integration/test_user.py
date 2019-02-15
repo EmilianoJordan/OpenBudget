@@ -264,4 +264,30 @@ class TestUser:
         assert r.status_code == 400
         assert 'password' in r.json['message'].lower()
         assert 'username' in r.json['message'].lower()
+
+    def test_post_existing_user(self, client, json_headers):
+        """
+        The API should return the exact same response if a user's email
+        exists or not. This is to prevent malicious email fishing and
+        verification.
+        """
+        user_data = fake.ob_user()
+        r = client.post(
+            url_for('api.user_post'),
+            headers=json_headers,
+            json=user_data
+        )
+
+        assert r.json['email'] == user_data['email']
+        assert r.status_code == 201
+
+        r = client.post(
+            url_for('api.user_post'),
+            headers=json_headers,
+            json=user_data
+        )
+
+        assert r.json['email'] == user_data['email']
+        assert r.status_code == 201
+
 # @TODO this is not complete... need a lot more user testing.
