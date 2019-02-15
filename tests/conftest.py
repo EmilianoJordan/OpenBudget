@@ -32,8 +32,6 @@ def db(app, tmpdir_factory):
     yield database
     database.drop_all()
 
-@pytest.fixture(scope='session')
-
 
 @pytest.fixture(scope='session')
 def client(app, db):
@@ -41,8 +39,8 @@ def client(app, db):
 
 
 @pytest.fixture(scope='class')
-def user(user_generator, confirmed=True):
-    return user_generator(1, confirmed=confirmed)[0]
+def user(user_generator):
+    return user_generator(1)[0]
 
 
 @pytest.fixture(scope='class')
