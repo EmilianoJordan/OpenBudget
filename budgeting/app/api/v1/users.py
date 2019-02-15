@@ -94,13 +94,14 @@ class UserPost(Resource):
         user = User(**data)
         db.session.add(user)
         db.session.commit()
+        user.send_confirm_account_email()
         return {'email': user.email}, 201
 
 
 class UserVerify(Resource):
 
-    def get(self, u_id, code):
-        user: User = User.verify_auth_token(code)
+    def get(self, code, u_id):
+        user: User = User.verify_url_token(code)
 
         if user is None:
             bad_request("User Token Expired.")
@@ -112,6 +113,6 @@ class UserVerify(Resource):
 
 
 api.add_resource(UserAPI, '/user/<int:u_id>', endpoint='user')
-api.add_resource(UserVerify, '/user/<int:u_id>/verify/<code>', endpoint='user_verify')
+# api.add_resource(UserVerify, '/user/<int:u_id>/verify/<code>', endpoint='user_verify')
 api.add_resource(UserListAPI, '/users/<int:page>', endpoint='user_list')
 api.add_resource(UserPost, '/user', endpoint='user_post')

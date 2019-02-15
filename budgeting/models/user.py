@@ -8,13 +8,14 @@ Author: Emiliano Jordan,
 import json
 from typing import List
 
-from flask import current_app, url_for
-from itsdangerous import (TimedJSONWebSignatureSerializer
-                          as Serializer, BadSignature, SignatureExpired)
+from flask import current_app, url_for, render_template
+from itsdangerous import (TimedJSONWebSignatureSerializer as Serializer, BadSignature,
+                          URLSafeTimedSerializer as URLSerializer, SignatureExpired)
 from sqlalchemy import event
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from ..app import db
+from ..app.email import send_email
 from .permissions import BasicUserRoles, UserPermissions
 
 
@@ -78,6 +79,19 @@ class User(db.Model):
         s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
         return s.dumps({'id': self.id})
 
+    def generate_url_token(self):
+        s = URLSerializer(current_app.config['SECRET_KEY'])
+        return s.dumps({'id': self.id})
+
+    @staticmethod
+    def verify_url_token(token, expiration=86400):
+        s = URLSerializer(current_app.config['SECRET_KEY'])
+        try:
+            data = s.loads(token, max_age=expiration)
+        except (SignatureExpired, BadSignature):
+            return None
+        return User.query.get(data['id'])
+
     @staticmethod
     def verify_auth_token(token):
         s = Serializer(current_app.config['SECRET_KEY'])
@@ -106,8 +120,13 @@ class User(db.Model):
 
         return data
 
-    def send_confirm_account_email(self, expiration=86400):
-        pass
+    def send_confirm_account_email(self):
+        send_email(
+            f'{self.username} Verify You Email Address',
+            [self.email],
+            render_template('confirm_email.txt', user=self),
+            render_template('confirm_email.html', user=self),
+        )
 
     def send_account_exists_email(self):
         pass

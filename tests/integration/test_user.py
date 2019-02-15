@@ -7,9 +7,12 @@ Author: Emiliano Jordan,
 """
 import json
 
+from bs4 import BeautifulSoup
 from flask import url_for
 import pytest
 
+
+from budgeting.app import mail
 from budgeting.models import User
 from budgeting.models.permissions import BasicUserRoles
 
@@ -170,6 +173,34 @@ class TestUser:
         assert u.id is not None
         assert not u.confirmed
         assert u._permissions == json.dumps(BasicUserRoles.USER)
+
+    # def test_post_user_confirmation_email(self, client, json_headers, get_auth_headers):
+    #     with mail.record_messages() as outbox:
+    #         user_data = fake.ob_user()
+    #
+    #         r = client.post(
+    #             url_for('api.user_post'),
+    #             headers=json_headers,
+    #             json=user_data
+    #         )
+    #
+    #         u: User = User.query.filter_by(email=user_data['email']).first()
+    #
+    #         assert u.id is not None
+    #         assert not u.confirmed
+    #         assert u._permissions == json.dumps(BasicUserRoles.USER)
+    #
+    #         soup = BeautifulSoup(outbox[-1].html, 'html.parser')
+    #         for a in soup.find_all('a'):
+    #             if a.text == 'Click Here':
+    #                 link = a.attrs['href']
+    #
+    #         r = client.get(
+    #             link,
+    #             headers=get_auth_headers(user_data),
+    #         )
+    #
+    #         assert r.status_code == 200
 
     def test_post_user_no_email(self, client, json_headers):
         """

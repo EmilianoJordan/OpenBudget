@@ -5,6 +5,7 @@ Author: Emiliano Jordan,
         https://www.linkedin.com/in/emilianojordan/,
         Most other things I'm @emilianojordan
 """
+from functools import lru_cache
 
 from flask import Flask
 from flask_login import LoginManager
@@ -13,13 +14,14 @@ from flask_sqlalchemy import SQLAlchemy
 
 # local import
 from budgeting.config import config
+from .decorators import cache_app
 
 db = SQLAlchemy()
 mail = Mail()
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
 
-
+@cache_app
 def create_app(config_name):
     app = Flask(__name__)
     app.config.from_object(config[config_name])

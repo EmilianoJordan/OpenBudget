@@ -14,7 +14,7 @@ from budgeting.app import create_app
 
 class TestBaseConfig:
     def setup_class(self):
-        self.app = create_app('base')
+        self.app = create_app('base', force_new=True)
 
     def test_app_is_base_config(self):
         assert self.app.env == 'production'
@@ -27,7 +27,7 @@ class TestBaseConfig:
 
 class TestDevConfig:
     def setup_class(self):
-        self.app = create_app('dev')
+        self.app = create_app('dev', force_new=True)
 
     def test_app_is_development_config(self):
         assert self.app.env == 'development'
@@ -40,7 +40,7 @@ class TestDevConfig:
 
 class TestTestConfig:
     def setup_class(self):
-        self.app = create_app('test')
+        self.app = create_app('test', force_new=True)
 
     def test_app_is_test_config(self):
         assert self.app.env == 'development'
@@ -49,3 +49,4 @@ class TestTestConfig:
         assert self.app.config['SECRET_KEY']
         assert isinstance(self.app.config['SECRET_KEY'], bytes)
         assert self.app.config['SQLALCHEMY_DATABASE_URI'] is None
+        # assert self.app.config['']

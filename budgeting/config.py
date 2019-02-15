@@ -92,8 +92,7 @@ class TestConfig(BaseConfig):
     SQLALCHEMY_TRACK_MODIFICATIONS = True
     SQLALCHEMY_RECORD_QUERIES = True
     DEBUG = True
-    TESTING = True
-    SQLALCHEMY_DATABASE_URI = ('sqlite:///' + os.path.join(basedir, 'test_db.sqlite'))
+    TESTING = True  # This will supress emails from flask-mail as well.
     SQLALCHEMY_DATABASE_URI = None
     SERVER_NAME = '127.0.0.1:5000'
 

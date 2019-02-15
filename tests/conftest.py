@@ -57,6 +57,7 @@ def employee_admin(user_generator):
 
 @pytest.fixture(scope='class')
 def user_generator(db):
+
     _user_dict = {}
 
     def _create_users(num, confirmed=True, permissions=BasicUserRoles.USER):
