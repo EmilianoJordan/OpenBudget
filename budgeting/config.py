@@ -20,6 +20,12 @@ class BaseConfig:
             or 'sqlite:///' + os.path.join(basedir, 'base_db.sqlite'))
     OB_PASS_EXPIRES = 600
 
+    MAIL_SERVER = 'smtp.googlemail.com'
+    MAIL_PORT = 465
+    MAIL_USE_TLS = False
+    MAIL_USE_SSL = True
+    MAIL_USERNAME = None
+    MAIL_PASSWORD = None
 
     @classmethod
     def init_app(cls, app):
@@ -45,14 +51,28 @@ class BaseConfig:
             if key == 'secret_key':
                 d[key.upper()] = cfg["BaseConfig"][key].encode()
                 continue
-            d[key.upper()] = cfg['BaseConfig'][key]
+            elif cfg["BaseConfig"][key] == 'True':
+                d[key.upper()] = True
+            elif cfg["BaseConfig"][key] == 'False':
+                d[key.upper()] = False
+            elif cfg["BaseConfig"][key] == 'None':
+                d[key.upper()] = None
+            else:
+                d[key.upper()] = cfg["BaseConfig"][key]
 
         if cls_name in cfg:
             for key in cfg[cls_name]:
                 if key == 'secret_key':
-                    d[key.upper()] = cfg["BaseConfig"][key].encode()
+                    d[key.upper()] = cfg[cls_name][key].encode()
                     continue
-                d[key.upper()] = cfg[cls_name][key]
+                elif cfg[cls_name][key] == 'True':
+                    d[key.upper()] = True
+                elif cfg[cls_name][key] == 'False':
+                    d[key.upper()] = None
+                elif cfg[cls_name][key] == 'None':
+                    d[key.upper()] = None
+                else:
+                    d[key.upper()] = cfg[cls_name][key]
         app.config.update(**d)
 
 
