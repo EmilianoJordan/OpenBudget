@@ -8,14 +8,16 @@ Author: Emiliano Jordan,
 from functools import lru_cache
 
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_mail import Mail
+from flask_sqlalchemy import SQLAlchemy
 
 # local import
 from budgeting.config import config
 from .decorators import cache_app
 
 db = SQLAlchemy()
+mail = Mail()
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
 
@@ -26,6 +28,7 @@ def create_app(config_name):
 
     config[config_name].init_app(app)
     db.init_app(app)
+    mail.init_app(app)
 
     if app.config['SSL_REDIRECT']:
         from flask_sslify import SSLify

@@ -46,7 +46,8 @@ setup(
         'flask_login',
         # 'click'
         'flask-restful',
-        'flask_httpauth==3.*'
+        'flask_httpauth==3.*',
+        'flask-mail==0.*'
     ],
     extras_require={
         'testing': [
