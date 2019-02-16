@@ -44,7 +44,8 @@ def get_token():
 @api_bp.before_request
 @auth.login_required
 def before_request():
-    if url_for('api.user_post') == request.url_rule.rule and 'POST' == request.method:
+    if (request.endpoint == 'api.user_post' and 'POST' == request.method)\
+            or (request.endpoint == 'api.user_verify' and 'GET' == request.method):
         return
 
     if not g.current_user.confirmed:

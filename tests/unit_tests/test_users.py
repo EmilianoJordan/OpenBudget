@@ -5,6 +5,7 @@ Author: Emiliano Jordan,
         https://www.linkedin.com/in/emilianojordan/,
         Most other things I'm @emilianojordan
 """
+from itsdangerous import URLSafeTimedSerializer, TimedJSONWebSignatureSerializer as Serializer
 import json
 import pytest
 from sqlalchemy.exc import IntegrityError
@@ -13,6 +14,7 @@ from budgeting.models import User
 from budgeting.models.permissions import BasicUserRoles, UserPermissions
 
 from tests.helpers import fake
+
 
 @pytest.mark.user
 class TestUserModel:
@@ -97,3 +99,48 @@ class TestUserModel:
 
         assert u.employee
         assert u.employee_admin
+
+    def test_user_auth_token(self, user):
+        u: User = User.query.filter_by(email=user['email']).one()
+        token = u.generate_auth_token()
+
+        u_verification: User = User.verify_auth_token(token)
+
+        assert u_verification.id == u.id
+        assert u_verification.email == u.email
+
+    def test_user_url_token(self, user):
+        u: User = User.query.filter_by(email=user['email']).one()
+
+        token = u.generate_url_token()
+
+        u_verification: User = User.verify_url_token(token)
+
+        assert u_verification.id == u.id
+        assert u_verification.email == u.email
+
+    def test_user_bad_auth_token(self, app, user):
+
+        u: User = User.query.filter_by(email=user['email']).one()
+        s = Serializer(app.config['SECRET_KEY'])
+        token = s.dumps({'spmedatya': 1})
+        u_verification: User = User.verify_auth_token(token)
+
+        assert u_verification is None
+
+        u_verification: User = User.verify_auth_token('asdkgjhl')
+
+        assert u_verification is None
+
+    def test_user_bad_url_token(self, app, user):
+
+        u: User = User.query.filter_by(email=user['email']).one()
+        s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+        token = s.dumps({'spmedatya': 1})
+        u_verification: User = User.verify_url_token(token)
+
+        assert u_verification is None
+
+        u_verification: User = User.verify_url_token('asdkgjhl')
+
+        assert u_verification is None

@@ -9,8 +9,8 @@ import json
 from typing import List
 
 from flask import current_app, url_for
-from itsdangerous import (TimedJSONWebSignatureSerializer
-                          as Serializer, BadSignature, SignatureExpired)
+from itsdangerous import (TimedJSONWebSignatureSerializer as Serializer,
+                          URLSafeTimedSerializer, BadSignature, SignatureExpired)
 from sqlalchemy import event
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -78,6 +78,10 @@ class User(db.Model):
         s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
         return s.dumps({'id': self.id})
 
+    def generate_url_token(self):
+        s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        return s.dumps({'id': self.id})
+
     @staticmethod
     def verify_auth_token(token):
         s = Serializer(current_app.config['SECRET_KEY'])
@@ -85,7 +89,25 @@ class User(db.Model):
             data = s.loads(token)
         except (SignatureExpired, BadSignature):
             return None
-        return User.query.get(data['id'])
+
+        try:
+            return User.query.get(data['id'])
+        except KeyError:
+            return None
+
+    @staticmethod
+    def verify_url_token(token, expiration=86400):
+        s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+
+        try:
+            data = s.loads(token, max_age=expiration)
+        except (SignatureExpired, BadSignature):
+            return None
+
+        try:
+            return User.query.get(data['id'])
+        except KeyError:
+            return None
 
     def has_permission(self, p:int):
         """

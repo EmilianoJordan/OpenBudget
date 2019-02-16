@@ -96,7 +96,12 @@ class UserPost(Resource):
         db.session.commit()
         return {'email': user.email}, 201
 
+class UserVerify(Resource):
+
+    def get(self, id, code):
+        return {'works': 'yes'}
 
 api.add_resource(UserAPI, '/user/<int:id>', endpoint='user')
+api.add_resource(UserVerify, '/user/<int:id>/verify/<code>', endpoint='user_verify')
 api.add_resource(UserListAPI, '/users/<int:page>', endpoint='user_list')
 api.add_resource(UserPost, '/user', endpoint='user_post')

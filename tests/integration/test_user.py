@@ -259,4 +259,24 @@ class TestUser:
         assert r.json['email'] == user_data['email']
         assert r.status_code == 201
 
+    def test_user_post_and_verify_email(self,client, json_headers, get_auth_headers):
+        user_data = fake.ob_user()
+        r = client.post(
+            url_for('api.user_post'),
+            headers=json_headers,
+            json=user_data
+        )
+
+        assert r.json['email'] == user_data['email']
+        assert r.status_code == 201
+
+        u = User.query.filter_by(email=user_data['email']).one()
+
+        r = client.get(
+            url_for('api.user_verify', id=u.id, code="asdgjk2"),
+            headers=get_auth_headers(user_data)
+        )
+
+        assert r.status_code == 200
+
 # @TODO this is not complete... need a lot more user testing.
