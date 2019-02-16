@@ -5,48 +5,51 @@ Author: Emiliano Jordan,
         https://www.linkedin.com/in/emilianojordan/,
         Most other things I'm @emilianojordan
 """
+from os import environ
 from pathlib import Path
-
-import pytest
-
-from budgeting.app import create_app
+import sys
 
 
-class TestBaseConfig:
-    def setup_class(self):
-        self.app = create_app('base', force_new=True)
-
+class TestConfig:
     def test_app_is_base_config(self):
-        assert self.app.env == 'production'
-        assert not self.app.config['DEBUG']
-        assert not self.app.config['TESTING']
-        assert self.app.config['SECRET_KEY']
-        assert isinstance(self.app.config['SECRET_KEY'], bytes)
-        assert Path(self.app.config['SQLALCHEMY_DATABASE_URI']).name == 'base_db.sqlite'
+        environ['FLASK_CONFIG'] = 'base'
 
+        from budgeting.ob import app
 
-class TestDevConfig:
-    def setup_class(self):
-        self.app = create_app('dev', force_new=True)
+        assert app.env == 'production'
+        assert not app.config['DEBUG']
+        assert not app.config['TESTING']
+        assert app.config['SECRET_KEY']
+        assert isinstance(app.config['SECRET_KEY'], bytes)
+        assert Path(app.config['SQLALCHEMY_DATABASE_URI']).name == 'base_db.sqlite'
+
+        del sys.modules['budgeting.ob']  # Clean up module import for any further testing.
 
     def test_app_is_development_config(self):
-        assert self.app.env == 'development'
-        assert self.app.config['DEBUG']
-        assert not self.app.config['TESTING']
-        assert self.app.config['SECRET_KEY']
-        assert isinstance(self.app.config['SECRET_KEY'], bytes)
-        assert Path(self.app.config['SQLALCHEMY_DATABASE_URI']).name == 'dev_db.sqlite'
+        environ['FLASK_CONFIG'] = 'dev'
 
+        from budgeting.ob import app
 
-class TestTestConfig:
-    def setup_class(self):
-        self.app = create_app('test', force_new=True)
+        assert app.env == 'development'
+        assert app.config['DEBUG']
+        assert not app.config['TESTING']
+        assert app.config['SECRET_KEY']
+        assert isinstance(app.config['SECRET_KEY'], bytes)
+        assert Path(app.config['SQLALCHEMY_DATABASE_URI']).name == 'dev_db.sqlite'
+
+        del sys.modules['budgeting.ob']  # Clean up module import for any further testing.
 
     def test_app_is_test_config(self):
-        assert self.app.env == 'development'
-        assert self.app.config['DEBUG']
-        assert self.app.config['TESTING']
-        assert self.app.config['SECRET_KEY']
-        assert isinstance(self.app.config['SECRET_KEY'], bytes)
-        assert self.app.config['SQLALCHEMY_DATABASE_URI'] is None
-        # assert self.app.config['']
+        environ['FLASK_CONFIG'] = 'test'
+
+        from budgeting.ob import app
+
+        assert app.env == 'development'
+        assert app.config['DEBUG']
+        assert app.config['TESTING']
+        assert app.config['SECRET_KEY']
+        assert isinstance(app.config['SECRET_KEY'], bytes)
+        assert app.config['SQLALCHEMY_DATABASE_URI'] is None
+
+        del sys.modules['budgeting.ob']  # Clean up module import for any further testing.
+
