@@ -17,4 +17,4 @@ from . import users, errors
 
 @api_bp.route('/')
 def home_page():
-    return jsonify({'hello':'world'})
+    return jsonify({'hello': 'world'})

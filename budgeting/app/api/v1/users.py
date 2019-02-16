@@ -111,8 +111,7 @@ class UserVerify(Resource):
 
         return
 
-
+# api.add_resource(UserVerify, '/user/<int:u_id>/verify/<code>', endpoint='user_verify')
 api.add_resource(UserAPI, '/user/<int:u_id>', endpoint='user')
-api.add_resource(UserVerify, '/user/<int:u_id>/verify/<code>', endpoint='user_verify')
 api.add_resource(UserListAPI, '/users/<int:page>', endpoint='user_list')
 api.add_resource(UserPost, '/user', endpoint='user_post')
