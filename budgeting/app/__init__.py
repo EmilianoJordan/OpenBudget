@@ -14,14 +14,13 @@ from flask_sqlalchemy import SQLAlchemy
 
 # local import
 from budgeting.config import config
-from .decorators import cache_app
 
 db = SQLAlchemy()
 mail = Mail()
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
 
-@cache_app
+
 def create_app(config_name):
     app = Flask(__name__)
     app.config.from_object(config[config_name])

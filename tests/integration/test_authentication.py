@@ -17,7 +17,7 @@ class TestAuthentication:
         r = client.get('/api/v1/')
         assert r.status_code == 401
 
-    def test_login(self, client, user):
+    def test_login(self, client, user, get_auth_headers):
         """
         A Valid login
         """
@@ -25,9 +25,10 @@ class TestAuthentication:
             f'{user["email"]}:{user["password"]}'.encode()
         ).decode('utf-8')
 
-        r = client.get('/api/v1/', headers={
-            'Authorization': f'Basic {valid_credentials}'
-        })
+        r = client.get(
+            '/api/v1/',
+            headers=get_auth_headers(user)
+        )
         assert r.status_code == 200
 
     def test_invalid_password(self, client, user):

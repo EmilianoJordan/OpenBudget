@@ -47,32 +47,20 @@ class BaseConfig:
         cls_name = cls.__name__
         d = {}
 
-        for key in cfg['BaseConfig']:
+        config = {**cfg['BaseConfig'], **cfg.setdefault(cls_name, {})}
+
+        for key, val in config.items():
             if key == 'secret_key':
-                d[key.upper()] = cfg["BaseConfig"][key].encode()
-                continue
-            elif cfg["BaseConfig"][key] == 'True':
+                d[key.upper()] = val.encode()
+            elif val == 'True':
                 d[key.upper()] = True
-            elif cfg["BaseConfig"][key] == 'False':
-                d[key.upper()] = False
-            elif cfg["BaseConfig"][key] == 'None':
+            elif val == 'False':
+                d[key.upper()] = None
+            elif val == 'None':
                 d[key.upper()] = None
             else:
-                d[key.upper()] = cfg["BaseConfig"][key]
+                d[key.upper()] = val
 
-        if cls_name in cfg:
-            for key in cfg[cls_name]:
-                if key == 'secret_key':
-                    d[key.upper()] = cfg[cls_name][key].encode()
-                    continue
-                elif cfg[cls_name][key] == 'True':
-                    d[key.upper()] = True
-                elif cfg[cls_name][key] == 'False':
-                    d[key.upper()] = None
-                elif cfg[cls_name][key] == 'None':
-                    d[key.upper()] = None
-                else:
-                    d[key.upper()] = cfg[cls_name][key]
         app.config.update(**d)
 
 
