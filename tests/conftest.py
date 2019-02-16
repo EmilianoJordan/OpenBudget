@@ -5,21 +5,35 @@ Author: Emiliano Jordan,
         https://www.linkedin.com/in/emilianojordan/,
         Most other things I'm @emilianojordan
 """
-import pytest
 from base64 import b64encode
+import json
+from os import environ
+import pytest
+import sys
+
 from budgeting.app import create_app, db as database
 from budgeting.models import User
 from budgeting.models.permissions import BasicUserRoles
-import json
 
 from tests.helpers import fake
 
 
 @pytest.fixture(scope='session')
 def app():
-    app = create_app('test')
-    app.app_context().push()
-    return app
+    # Clean up module space incase someone else didn't clean up after themselves.
+    if 'budgeting.app' in sys.modules:
+        del sys.modules['budgeting.app']
+
+    environ['FLASK_CONFIG'] = 'test'
+
+    from budgeting.ob import app
+
+    with app.app_context():
+        yield app
+
+    # On a session level fixture this isn't needed but if this is ever changed to have less scope
+    # I want to future proof it a bit.
+    del sys.modules['budgeting.ob']  # Clean up module import for any further testing.
 
 
 @pytest.fixture(scope='session')
