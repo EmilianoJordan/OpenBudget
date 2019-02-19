@@ -86,7 +86,7 @@ def user_generator(db):
             user_model.confirmed = confirmed
             user_model.permissions = permissions
 
-        # Create new users if needed. 
+        # Create new users if needed.
         while len(_user_dict[key]) < num:
             user = fake.ob_user()
             user['permissions'] = permissions
