@@ -55,22 +55,22 @@ def client(app, db):
     return app.test_client()
 
 
-@pytest.fixture(scope='class')
+@pytest.fixture
 def user(user_generator, confirmed=True):
     return user_generator(1, confirmed=confirmed)[0]
 
 
-@pytest.fixture(scope='class')
+@pytest.fixture
 def employee(user_generator):
     return user_generator(1, permissions=BasicUserRoles.EMPLOYEE)[0]
 
 
-@pytest.fixture(scope='class')
+@pytest.fixture
 def employee_admin(user_generator):
     return user_generator(1, permissions=BasicUserRoles.EMPLOYEE_SUPER_ADMIN)[0]
 
 
-@pytest.fixture(scope='class')
+@pytest.fixture
 def user_generator(db):
     _user_dict = {}
 
@@ -78,13 +78,24 @@ def user_generator(db):
 
         key = json.dumps(permissions)
 
-        while len(_user_dict.setdefault(key, [])) < num:
+        # This resets the DB with all the faked user information.
+        limit = (num if num < len(_user_dict.setdefault(key, [])) else len(_user_dict[key]))
+        for user in _user_dict[key][:limit]:
+            user_model: User = User.query.filter_by(email=user['email'])
+            [setattr(user_model, k, v) for k, v in user.items()]
+            user_model.confirmed = confirmed
+            user_model.permissions = permissions
+
+        # Create new users if needed. 
+        while len(_user_dict[key]) < num:
             user = fake.ob_user()
             user['permissions'] = permissions
             user_model = User(**user)
             user_model.confirmed = confirmed
             db.session.add(user_model)
             _user_dict.setdefault(key, []).append(user)
+
+
 
         db.session.commit()
 
