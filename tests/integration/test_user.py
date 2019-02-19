@@ -19,7 +19,7 @@ from tests.helpers import fake
 
 
 @pytest.mark.user
-class TestUser:
+class TestUserProfile:
 
     def test_get_user_profile_page(self, client, user, get_auth_headers):
         """
@@ -48,6 +48,9 @@ class TestUser:
         )
 
         assert r.status_code == 404
+
+
+class TestUserList:
 
     def test_user_list_as_admin(self, client, employee_admin, user_generator, get_auth_headers):
         """
@@ -150,6 +153,9 @@ class TestUser:
         )
 
         assert r.status_code == 404
+
+
+class TestCreateUser:
 
     def test_post_user(self, client, json_headers):
         """
@@ -265,7 +271,6 @@ class TestUser:
         user_data = fake.ob_user()
 
         with mail.record_messages() as outbox:
-
             r = client.post(
                 url_for('api.user_post'),
                 headers=json_headers,
@@ -300,7 +305,6 @@ class TestUser:
         user_data = fake.ob_user()
 
         with mail.record_messages() as outbox:
-
             r = client.post(
                 url_for('api.user_post'),
                 headers=json_headers,
@@ -324,7 +328,7 @@ class TestUser:
             code, uid = link_parts[-1], link_parts[-3]
 
             r = client.get(
-                url_for('api.user_verify', code=code, uid=int(uid)+1),
+                url_for('api.user_verify', code=code, uid=int(uid) + 1),
                 headers=get_auth_headers(user_data)
             )
 
@@ -338,7 +342,6 @@ class TestUser:
         user_data = fake.ob_user()
 
         with mail.record_messages() as outbox:
-
             r = client.post(
                 url_for('api.user_post'),
                 headers=json_headers,
@@ -362,7 +365,7 @@ class TestUser:
             code, uid = link_parts[-1], link_parts[-3]
 
             r = client.get(
-                url_for('api.user_verify', code=code+'asdg43', uid=uid),
+                url_for('api.user_verify', code=code + 'asdg43', uid=uid),
                 headers=get_auth_headers(user_data)
             )
 
@@ -372,10 +375,10 @@ class TestUser:
 
             assert not u.confirmed
 
+
 class TestUserPut:
 
     def test_user_put(self, client, user, get_auth_headers):
-
         u = User.query.filter_by(email=user['email']).first()
 
         r = client.put(
