@@ -7,11 +7,13 @@ Author: Emiliano Jordan,
 """
 import json
 
+from bs4 import BeautifulSoup
 from flask import url_for
 import pytest
 
 from budgeting.models import User
 from budgeting.models.permissions import BasicUserRoles
+from budgeting.app import mail
 
 from tests.helpers import fake
 
@@ -25,7 +27,7 @@ class TestUser:
         """
         u = User.query.filter_by(email=user['email']).one()
         r = client.get(
-            url_for('api.user', id=u.id, _external=False),
+            url_for('api.user', uid=u.id, _external=False),
             headers=get_auth_headers(user)
         )
 
@@ -41,7 +43,7 @@ class TestUser:
         u = User.query.filter_by(email=u1['email']).one()
 
         r = client.get(
-            url_for('api.user', id=u.id, _external=False),
+            url_for('api.user', uid=u.id, _external=False),
             headers=get_auth_headers(u2)
         )
 
@@ -259,24 +261,115 @@ class TestUser:
         assert r.json['email'] == user_data['email']
         assert r.status_code == 201
 
-    def test_user_post_and_verify_email(self,client, json_headers, get_auth_headers):
+    def test_user_post_and_verify_email(self, client, json_headers, get_auth_headers):
         user_data = fake.ob_user()
-        r = client.post(
-            url_for('api.user_post'),
-            headers=json_headers,
-            json=user_data
-        )
 
-        assert r.json['email'] == user_data['email']
-        assert r.status_code == 201
+        with mail.record_messages() as outbox:
 
-        u = User.query.filter_by(email=user_data['email']).one()
+            r = client.post(
+                url_for('api.user_post'),
+                headers=json_headers,
+                json=user_data
+            )
 
-        r = client.get(
-            url_for('api.user_verify', id=u.id, code="asdgjk2"),
-            headers=get_auth_headers(user_data)
-        )
+            assert r.json['email'] == user_data['email']
+            assert r.status_code == 201
 
-        assert r.status_code == 200
+            u = User.query.filter_by(email=user_data['email']).one()
+
+            assert not u.confirmed
+
+            soup = BeautifulSoup(outbox[-1].html)
+
+            soup.find_all('a')
+
+            link = soup.find_all('a', id="confirm_email_link")[-1].get('href')
+
+            r = client.get(
+                link,
+                headers=get_auth_headers(user_data)
+            )
+
+            assert r.status_code == 200
+
+            u = User.query.filter_by(email=user_data['email']).one()
+
+            assert u.confirmed
+
+    def test_verify_email_bad_uid(self, client, json_headers, get_auth_headers):
+        user_data = fake.ob_user()
+
+        with mail.record_messages() as outbox:
+
+            r = client.post(
+                url_for('api.user_post'),
+                headers=json_headers,
+                json=user_data
+            )
+
+            assert r.json['email'] == user_data['email']
+            assert r.status_code == 201
+
+            u = User.query.filter_by(email=user_data['email']).one()
+
+            assert not u.confirmed
+
+            soup = BeautifulSoup(outbox[-1].html)
+
+            soup.find_all('a')
+
+            link = soup.find_all('a', id="confirm_email_link")[-1].get('href')
+            link_parts = link.split('/')
+
+            code, uid = link_parts[-1], link_parts[-3]
+
+            r = client.get(
+                url_for('api.user_verify', code=code, uid=int(uid)+1),
+                headers=get_auth_headers(user_data)
+            )
+
+            assert r.status_code == 400
+
+            u = User.query.filter_by(email=user_data['email']).one()
+
+            assert not u.confirmed
+
+    def test_verify_email_bad_token(self, client, json_headers, get_auth_headers):
+        user_data = fake.ob_user()
+
+        with mail.record_messages() as outbox:
+
+            r = client.post(
+                url_for('api.user_post'),
+                headers=json_headers,
+                json=user_data
+            )
+
+            assert r.json['email'] == user_data['email']
+            assert r.status_code == 201
+
+            u = User.query.filter_by(email=user_data['email']).one()
+
+            assert not u.confirmed
+
+            soup = BeautifulSoup(outbox[-1].html)
+
+            soup.find_all('a')
+
+            link = soup.find_all('a', id="confirm_email_link")[-1].get('href')
+            link_parts = link.split('/')
+
+            code, uid = link_parts[-1], link_parts[-3]
+
+            r = client.get(
+                url_for('api.user_verify', code=code+'asdg43', uid=uid),
+                headers=get_auth_headers(user_data)
+            )
+
+            assert r.status_code == 400
+
+            u = User.query.filter_by(email=user_data['email']).one()
+
+            assert not u.confirmed
 
 # @TODO this is not complete... need a lot more user testing.

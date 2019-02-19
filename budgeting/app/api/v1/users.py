@@ -18,16 +18,16 @@ from . import api
 class UserAPI(Resource):
 
     @staticmethod
-    def get(id):
-        user = User.query.get_or_404(id)
+    def get(uid):
+        user = User.query.get_or_404(uid)
         if g.current_user == user:
             return jsonify(user.to_dict())
         return not_found()
 
-    def put(self, id):
+    def put(self, uid):
         pass
 
-    def delete(self, id):
+    def delete(self, uid):
         pass
 
 
@@ -88,20 +88,31 @@ class UserPost(Resource):
         except BadRequest as e:
             bad_request(' '.join([v for k, v in e.data['message'].items()]))
 
-        if User.query.filter_by(email=data['email']).first():
+        u: User = User.query.filter_by(email=data['email']).first()
+        if u:
+            # @TODO need to send already exists email
             return {'email': data['email']}, 201
 
         user = User(**data)
         db.session.add(user)
         db.session.commit()
+
+        user.send_confirm_account_email()
         return {'email': user.email}, 201
 
 class UserVerify(Resource):
 
-    def get(self, id, code):
-        return {'works': 'yes'}
+    def get(self, uid, code):
+        u: User = User.verify_url_token(code)
 
-api.add_resource(UserAPI, '/user/<int:id>', endpoint='user')
-api.add_resource(UserVerify, '/user/<int:id>/verify/<code>', endpoint='user_verify')
+        if u is not None and u.id == uid:
+            u.confirmed = True
+            db.session.commit()
+            return
+
+        bad_request('Could Not verify the user.')
+
+api.add_resource(UserAPI, '/user/<int:uid>', endpoint='user')
+api.add_resource(UserVerify, '/user/<int:uid>/verify/<code>', endpoint='user_verify')
 api.add_resource(UserListAPI, '/users/<int:page>', endpoint='user_list')
 api.add_resource(UserPost, '/user', endpoint='user_post')

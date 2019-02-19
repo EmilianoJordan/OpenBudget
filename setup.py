@@ -54,7 +54,8 @@ setup(
             'requests==2.*',
             'pytest==4.*',
             'pytest-flask==0.*',
-            'faker==1.*'
+            'faker==1.*',
+            'bs4=4.*'
         ]
     }
 )

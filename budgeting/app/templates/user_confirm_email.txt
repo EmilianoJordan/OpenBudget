@@ -1,0 +1,9 @@
+Dear {{ user.nickname }},
+
+Please confirm that your email address was registered on OpenBudget.com:
+
+{{ url_for('api.user_verify', uid=user.id, code=user.generate_url_token(), _external=True) }}
+
+Regards,
+
+The OpenBudget Admin

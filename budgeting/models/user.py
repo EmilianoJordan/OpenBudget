@@ -8,13 +8,13 @@ Author: Emiliano Jordan,
 import json
 from typing import List
 
-from flask import current_app, url_for
+from flask import current_app, render_template
 from itsdangerous import (TimedJSONWebSignatureSerializer as Serializer,
                           URLSafeTimedSerializer, BadSignature, SignatureExpired)
-from sqlalchemy import event
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from ..app import db
+from budgeting.app.email import send_email
 from .permissions import BasicUserRoles, UserPermissions
 
 
@@ -109,7 +109,7 @@ class User(db.Model):
         except KeyError:
             return None
 
-    def has_permission(self, p:int):
+    def has_permission(self, p: int):
         """
 
         :param p: A Permission value from .permissions.UserPermissions
@@ -127,6 +127,17 @@ class User(db.Model):
             data['email'] = self.email
 
         return data
+
+    def send_confirm_account_email(self):
+        send_email(
+            f'{self.username} Verify You Email Address',
+            [self.email],
+            render_template('user_confirm_email.txt', user=self),
+            render_template('user_confirm_email.html', user=self),
+        )
+
+    def send_account_exists_email(self):
+        pass
 
     @staticmethod
     def fake_to_dict(**kwargs):

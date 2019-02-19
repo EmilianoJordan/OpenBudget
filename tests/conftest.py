@@ -44,6 +44,7 @@ def db(app, tmpdir_factory):
     )
     database.create_all()
     yield database
+    database.session.close()
     database.drop_all()
 
 # @pytest.fixture(scope='session')
