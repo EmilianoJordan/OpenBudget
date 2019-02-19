@@ -372,4 +372,65 @@ class TestUser:
 
             assert not u.confirmed
 
-# @TODO this is not complete... need a lot more user testing.
+class TestUserPut:
+
+    def test_user_put(self, client, user, get_auth_headers):
+
+        u = User.query.filter_by(email=user['email']).first()
+
+        r = client.put(
+            url_for('api.user', uid=u.id),
+            headers=get_auth_headers(user),
+            json={k: v for k, v in user.items() if k != 'email'}
+        )
+
+        assert r.status_code == 201
+
+    def test_user_change_password(self, client, user, get_auth_headers):
+        u: User = User.query.filter_by(email=user['email']).first()
+
+        assert u.verify_password(user['password'])
+
+        r = client.put(
+            url_for('api.user', uid=u.id),
+            headers=get_auth_headers(user),
+            json={'password': 'test_new'}
+        )
+
+        assert r.status_code == 201
+
+        u = User.query.filter_by(email=user['email']).first()
+
+        assert not u.verify_password(user['password'])
+        assert u.verify_password('test_new')
+
+    def test_user_change_username(self, client, user, get_auth_headers):
+        u: User = User.query.filter_by(email=user['email']).first()
+
+        r = client.put(
+            url_for('api.user', uid=u.id),
+            headers=get_auth_headers(user),
+            json={'username': 'test_new'}
+        )
+
+        u: User = User.query.filter_by(email=user['email']).first()
+
+        assert u.username == 'test_new'
+
+    def test_user_change_email(self, client, user, get_auth_headers):
+        u: User = User.query.filter_by(email=user['email']).first()
+        with mail.record_messages() as outbox:
+            r = client.put(
+                url_for('api.user', uid=u.id),
+                headers=get_auth_headers(user),
+                json={'email': 'test_new@gmail.com'}
+            )
+
+            assert len(outbox) == 1
+            assert ', Verify Your Email Address' in outbox[-1].subject
+            assert url_for('api.user', uid=u.id) in outbox[-1].html
+
+        u: User = User.query.filter_by(id=u.id).first()
+
+        assert not u.confirmed
+        assert u.email == 'test_new@gmail.com'

@@ -130,7 +130,7 @@ class User(db.Model):
 
     def send_confirm_account_email(self):
         send_email(
-            f'{self.username} Verify You Email Address',
+            f'{self.username}, Verify Your Email Address',
             [self.email],
             render_template('user_confirm_email.txt', user=self),
             render_template('user_confirm_email.html', user=self),
@@ -138,8 +138,3 @@ class User(db.Model):
 
     def send_account_exists_email(self):
         pass
-
-    @staticmethod
-    def fake_to_dict(**kwargs):
-        data = {
-        }

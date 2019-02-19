@@ -17,6 +17,15 @@ from . import api
 
 class UserAPI(Resource):
 
+    def __init__(self):
+        self.rparse = reqparse.RequestParser(bundle_errors=True)
+        self.rparse.add_argument('email', type=str,
+                                 help='No Email Provided.')
+        self.rparse.add_argument('password', type=str,
+                                 help='No Password Provided.')
+        self.rparse.add_argument('username', type=str,
+                                 help='No Username Provided.')
+
     @staticmethod
     def get(uid):
         user = User.query.get_or_404(uid)
@@ -25,7 +34,28 @@ class UserAPI(Resource):
         return not_found()
 
     def put(self, uid):
-        pass
+
+        u: User = User.query.filter_by(id=uid).first()
+
+        # Validate the user to be edited is the same as the authenticated user.
+        if g.current_user != u:
+            return bad_request('Cannot find User.')
+
+        try:
+            data = self.rparse.parse_args()
+        except BadRequest as e:
+            bad_request(' '.join([v for k, v in e.data['message'].items()]))
+
+        if data['email'] is not None and u.email != data['email']:
+            u.send_confirm_account_email()
+            u.confirmed = False
+            u.email = data['email']
+
+        [setattr(u, k, v) for k, v in data.items() if k != 'email' and v is not None]
+
+        db.session.commit()
+
+        return '', 201
 
     def delete(self, uid):
         pass
@@ -58,9 +88,9 @@ class UserListAPI(Resource):
             'per_page': 20,
             'count': users.total,
             'next':
-                url_for('api.user_list', page=page+1, _external=True) if users.has_next else '',
+                url_for('api.user_list', page=page + 1, _external=True) if users.has_next else '',
             'prev':
-                url_for('api.user_list', page=page-1, _external=True) if users.has_prev else '',
+                url_for('api.user_list', page=page - 1, _external=True) if users.has_prev else '',
             'users': users.items,
         }
 
@@ -100,6 +130,7 @@ class UserPost(Resource):
         user.send_confirm_account_email()
         return {'email': user.email}, 201
 
+
 class UserVerify(Resource):
 
     def get(self, uid, code):
@@ -111,6 +142,7 @@ class UserVerify(Resource):
             return
 
         bad_request('Could Not verify the user.')
+
 
 api.add_resource(UserAPI, '/user/<int:uid>', endpoint='user')
 api.add_resource(UserVerify, '/user/<int:uid>/verify/<code>', endpoint='user_verify')
