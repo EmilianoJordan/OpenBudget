@@ -26,13 +26,15 @@ class User(db.Model):
     password_hash = db.Column(db.String(264))
     confirmed = db.Column(db.Boolean, default=False)
     _permissions = db.Column(db.String, nullable=False)
+    deleted = db.Column(db.Boolean, default=False)
 
     def __init__(self,
                  username=None,
                  email=None,
                  password=None,
                  confirmed=False,
-                 permissions=BasicUserRoles.USER):
+                 permissions=BasicUserRoles.USER,
+                 deleted = False):
 
         self.username = username
         self.email = email
@@ -40,6 +42,7 @@ class User(db.Model):
             self.password = password
         self.confirmed = confirmed
         self._permissions = json.dumps(permissions)
+        self.deleted = deleted
 
     @property
     def employee(self):
@@ -78,9 +81,9 @@ class User(db.Model):
         s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
         return s.dumps({'id': self.id})
 
-    def generate_url_token(self):
+    def generate_url_token(self, action):
         s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
-        return s.dumps({'id': self.id})
+        return s.dumps({'id': self.id, 'action': action})
 
     @staticmethod
     def verify_auth_token(token):
@@ -102,12 +105,12 @@ class User(db.Model):
         try:
             data = s.loads(token, max_age=expiration)
         except (SignatureExpired, BadSignature):
-            return None
+            return None, None
 
         try:
-            return User.query.get(data['id'])
+            return User.query.get(data['id']), data['action']
         except KeyError:
-            return None
+            return None, None
 
     def has_permission(self, p: int):
         """

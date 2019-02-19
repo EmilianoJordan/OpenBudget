@@ -104,7 +104,7 @@ class TestUserModel:
         u: User = User.query.filter_by(email=user['email']).one()
         token = u.generate_auth_token()
 
-        u_verification: User = User.verify_auth_token(token)
+        u_verification = User.verify_auth_token(token)
 
         assert u_verification.id == u.id
         assert u_verification.email == u.email
@@ -112,23 +112,24 @@ class TestUserModel:
     def test_user_url_token(self, user):
         u: User = User.query.filter_by(email=user['email']).one()
 
-        token = u.generate_url_token()
+        token = u.generate_url_token('verify_email')
 
-        u_verification: User = User.verify_url_token(token)
+        u_verification, action = User.verify_url_token(token)
 
         assert u_verification.id == u.id
         assert u_verification.email == u.email
+        assert action == 'verify_email'
 
     def test_user_bad_auth_token(self, app, user):
 
         u: User = User.query.filter_by(email=user['email']).one()
         s = Serializer(app.config['SECRET_KEY'])
         token = s.dumps({'spmedatya': 1})
-        u_verification: User = User.verify_auth_token(token)
+        u_verification = User.verify_auth_token(token)
 
         assert u_verification is None
 
-        u_verification: User = User.verify_auth_token('asdkgjhl')
+        u_verification = User.verify_auth_token('asdkgjhl')
 
         assert u_verification is None
 
@@ -137,10 +138,10 @@ class TestUserModel:
         u: User = User.query.filter_by(email=user['email']).one()
         s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
         token = s.dumps({'spmedatya': 1})
-        u_verification: User = User.verify_url_token(token)
+        u_verification, action = User.verify_url_token(token)
 
         assert u_verification is None
 
-        u_verification: User = User.verify_url_token('asdkgjhl')
+        u_verification, action = User.verify_url_token('asdkgjhl')
 
         assert u_verification is None

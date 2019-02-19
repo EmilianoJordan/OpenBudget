@@ -7,6 +7,7 @@ Author: Emiliano Jordan,
 """
 from flask import jsonify, request, url_for, g
 from flask_restful import Resource, reqparse, fields, marshal_with
+from sqlalchemy import inspect, inspection
 from werkzeug.exceptions import BadRequest
 
 from budgeting.models import User
@@ -38,8 +39,10 @@ class UserAPI(Resource):
         u: User = User.query.filter_by(id=uid).first()
 
         # Validate the user to be edited is the same as the authenticated user.
-        if g.current_user != u:
-            return bad_request('Cannot find User.')
+        if (u != g.current_user
+                and not g.current_user.employee
+                and not g.current_user.employee_admin):
+            bad_request("Unable to modify a user other than the currently logged in user.")
 
         try:
             data = self.rparse.parse_args()
@@ -55,10 +58,23 @@ class UserAPI(Resource):
 
         db.session.commit()
 
-        return '', 201
+        return '', 204
 
     def delete(self, uid):
-        pass
+        u = User.query.filter_by(id=uid).first()
+
+        if u is None:
+            not_found('User not Found.')
+
+        if (u != g.current_user
+                and not g.current_user.employee
+                and not g.current_user.employee_admin):
+            bad_request("Unable to DELETE a user other than the currently logged in user.")
+
+        User.query.filter_by(id=uid).delete()
+        db.session.commit()
+
+        return '', 204
 
 
 user_fields = {
@@ -134,7 +150,7 @@ class UserPost(Resource):
 class UserVerify(Resource):
 
     def get(self, uid, code):
-        u: User = User.verify_url_token(code)
+        u, action = User.verify_url_token(code)
 
         if u is not None and u.id == uid:
             u.confirmed = True

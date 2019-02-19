@@ -2,7 +2,7 @@ Dear {{ user.nickname }},
 
 Please confirm that your email address was registered on OpenBudget.com:
 
-{{ url_for('api.user_verify', uid=user.id, code=user.generate_url_token(), _external=True) }}
+{{ url_for('api.user_verify', uid=user.id, code=user.generate_url_token('verify_email'), _external=True) }}
 
 Regards,
 

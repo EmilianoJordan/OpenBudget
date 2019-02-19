@@ -387,7 +387,7 @@ class TestUserPut:
             json={k: v for k, v in user.items() if k != 'email'}
         )
 
-        assert r.status_code == 201
+        assert r.status_code == 204
 
     def test_user_change_password(self, client, user, get_auth_headers):
         u: User = User.query.filter_by(email=user['email']).first()
@@ -400,7 +400,7 @@ class TestUserPut:
             json={'password': 'test_new'}
         )
 
-        assert r.status_code == 201
+        assert r.status_code == 204
 
         u = User.query.filter_by(email=user['email']).first()
 
@@ -437,3 +437,20 @@ class TestUserPut:
 
         assert not u.confirmed
         assert u.email == 'test_new@gmail.com'
+
+
+class TestUserDelete:
+
+    def test_user_put(self, client, db, user, get_auth_headers):
+        u = User.query.filter_by(email=user['email']).first()
+        uid = u.id
+
+        r = client.delete(
+            url_for('api.user', uid=uid),
+            headers=get_auth_headers(user),
+        )
+
+        assert r.status_code == 204
+
+        assert User.query.filter_by(email=user['email']).first() is None
+        assert User.query.filter_by(id=uid).first() is None

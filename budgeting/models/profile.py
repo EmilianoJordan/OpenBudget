@@ -7,6 +7,8 @@ Author: Emiliano Jordan,
 """
 from ..app import db
 
+class UserProfileAssociation(db.Model):
+    pass
 
 class Profile(db.Model):
     pass

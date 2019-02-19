@@ -3,7 +3,7 @@
 <p>Please confirm that your email address was registered on OpenBudget.com:
 
 <p><a id="confirm_email_link"
-      href="{{ url_for('api.user_verify', uid=user.id, code=user.generate_url_token(), _external=True) }}">Click
+      href="{{ url_for('api.user_verify', uid=user.id, code=user.generate_url_token('verify_email'), _external=True) }}">Click
     Here</a></p>
 
 <p>Regards,</p>
