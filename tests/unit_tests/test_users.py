@@ -114,11 +114,11 @@ class TestUserModel:
 
         token = u.generate_url_token('verify_email')
 
-        u_verification, action = User.verify_url_token(token)
+        u_verification, data = User.verify_url_token(token)
 
         assert u_verification.id == u.id
         assert u_verification.email == u.email
-        assert action == 'verify_email'
+        assert data['action'] == 'verify_email'
 
     def test_user_bad_auth_token(self, app, user):
 
@@ -138,10 +138,10 @@ class TestUserModel:
         u: User = User.query.filter_by(email=user['email']).one()
         s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
         token = s.dumps({'spmedatya': 1})
-        u_verification, action = User.verify_url_token(token)
+        u_verification, data = User.verify_url_token(token)
 
         assert u_verification is None
 
-        u_verification, action = User.verify_url_token('asdkgjhl')
+        u_verification, data = User.verify_url_token('asdkgjhl')
 
         assert u_verification is None

@@ -11,7 +11,9 @@ from typing import List
 from flask import current_app, render_template
 from itsdangerous import (TimedJSONWebSignatureSerializer as Serializer,
                           URLSafeTimedSerializer, BadSignature, SignatureExpired)
+from typing import Dict
 from werkzeug.security import generate_password_hash, check_password_hash
+
 
 from ..app import db
 from budgeting.app.email import send_email
@@ -21,12 +23,13 @@ from .permissions import BasicUserRoles, UserPermissions
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(64), unique=True, index=True)
+    email = db.Column(db.String(64), unique=True, index=True, nullable=False)
     username = db.Column(db.String(64), unique=True, index=True)
     password_hash = db.Column(db.String(264))
     confirmed = db.Column(db.Boolean, default=False)
     _permissions = db.Column(db.String, nullable=False)
     deleted = db.Column(db.Boolean, default=False)
+    emails = db.relationship("Email", backref="user", cascade="all, delete-orphan")
 
     def __init__(self,
                  username=None,
@@ -81,9 +84,9 @@ class User(db.Model):
         s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
         return s.dumps({'id': self.id})
 
-    def generate_url_token(self, action):
+    def generate_url_token(self, action, data: Dict = {}):
         s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
-        return s.dumps({'id': self.id, 'action': action})
+        return s.dumps({'id': self.id, 'action': action, **data})
 
     @staticmethod
     def verify_auth_token(token):
@@ -108,7 +111,7 @@ class User(db.Model):
             return None, None
 
         try:
-            return User.query.get(data['id']), data['action']
+            return User.query.get(data['id']), data
         except KeyError:
             return None, None
 
@@ -131,10 +134,10 @@ class User(db.Model):
 
         return data
 
-    def send_confirm_account_email(self):
+    def send_confirm_account_email(self, email:str = ''):
         send_email(
             f'{self.username}, Verify Your Email Address',
-            [self.email],
+            [self.email if email == '' else email],
             render_template('user_confirm_email.txt', user=self),
             render_template('user_confirm_email.html', user=self),
         )

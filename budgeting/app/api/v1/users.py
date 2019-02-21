@@ -10,7 +10,7 @@ from flask_restful import Resource, reqparse, fields, marshal_with
 from sqlalchemy import inspect, inspection
 from werkzeug.exceptions import BadRequest
 
-from budgeting.models import User
+from budgeting.models import User, Email
 from budgeting.app import db
 from .errors import bad_request, not_found
 from . import api
@@ -134,12 +134,13 @@ class UserPost(Resource):
         except BadRequest as e:
             bad_request(' '.join([v for k, v in e.data['message'].items()]))
 
-        u: User = User.query.filter_by(email=data['email']).first()
-        if u:
+        e: Email = Email.query.filter_by(email=data['email']).first()
+        if e:
             # @TODO need to send already exists email
             return {'email': data['email']}, 201
 
         user = User(**data)
+        user.emails.append(Email(data['email']))
         db.session.add(user)
         db.session.commit()
 
@@ -150,7 +151,7 @@ class UserPost(Resource):
 class UserVerify(Resource):
 
     def get(self, uid, code):
-        u, action = User.verify_url_token(code)
+        u, data = User.verify_url_token(code)
 
         if u is not None and u.id == uid:
             u.confirmed = True

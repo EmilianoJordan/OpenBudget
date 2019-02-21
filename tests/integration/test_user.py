@@ -284,7 +284,7 @@ class TestCreateUser:
 
             assert not u.confirmed
 
-            soup = BeautifulSoup(outbox[-1].html)
+            soup = BeautifulSoup(outbox[-1].html, "html.parser")
 
             soup.find_all('a')
 
@@ -318,7 +318,7 @@ class TestCreateUser:
 
             assert not u.confirmed
 
-            soup = BeautifulSoup(outbox[-1].html)
+            soup = BeautifulSoup(outbox[-1].html, "html.parser")
 
             soup.find_all('a')
 
@@ -355,7 +355,7 @@ class TestCreateUser:
 
             assert not u.confirmed
 
-            soup = BeautifulSoup(outbox[-1].html)
+            soup = BeautifulSoup(outbox[-1].html, "html.parser")
 
             soup.find_all('a')
 
