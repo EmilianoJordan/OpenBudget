@@ -7,7 +7,7 @@ Author: Emiliano Jordan,
 """
 from flask import jsonify, request, url_for, g
 from flask_restful import Resource, reqparse, fields, marshal_with
-from sqlalchemy import inspect, inspection
+from sqlalchemy.orm.session import sessionmaker
 from werkzeug.exceptions import BadRequest
 
 from budgeting.models import User, Email
@@ -50,7 +50,7 @@ class UserAPI(Resource):
             bad_request(' '.join([v for k, v in e.data['message'].items()]))
 
         if data['email'] is not None and u.email != data['email']:
-            u.send_confirm_account_email()
+            u.send_confirm_email()
             u.confirmed = False
             u.email = data['email']
 
@@ -71,7 +71,14 @@ class UserAPI(Resource):
                 and not g.current_user.employee_admin):
             bad_request("Unable to DELETE a user other than the currently logged in user.")
 
-        User.query.filter_by(id=uid).delete()
+        # Need to make sure that the object is not bound to any other sessions or else the
+        # db.session.delete() call will fail.
+        session = sessionmaker().object_session(u)
+        if session is not None:
+            session.expunge(u)
+
+        del g.current_user
+        db.session.delete(u)
         db.session.commit()
 
         return '', 204
@@ -140,11 +147,11 @@ class UserPost(Resource):
             return {'email': data['email']}, 201
 
         user = User(**data)
-        user.emails.append(Email(data['email']))
+        # user.emails.append(Email(user.email))
         db.session.add(user)
         db.session.commit()
-
-        user.send_confirm_account_email()
+        assert len(user.emails) == 1
+        user.send_confirm_email()
         return {'email': user.email}, 201
 
 

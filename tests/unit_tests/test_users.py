@@ -10,7 +10,7 @@ import json
 import pytest
 from sqlalchemy.exc import IntegrityError
 
-from budgeting.models import User
+from budgeting.models import User, Email
 from budgeting.models.permissions import BasicUserRoles, UserPermissions
 
 from tests.helpers import fake
@@ -35,10 +35,6 @@ class TestUserModel:
     def test_user_db_insert(self, db):
         """
         Verify that the user is being properly inserted into the db.
-        :param db:
-        :type db:
-        :return:
-        :rtype:
         """
         u = fake.ob_user()
         u1 = User(**u)
@@ -46,6 +42,8 @@ class TestUserModel:
         db.session.add(u1)
         db.session.commit()
         assert isinstance(u1.id, int)
+        assert len(u1.emails) == 1
+        assert u1.emails[0].email == u['email']
 
     def test_user_db_uniqueness(self, db):
         u = fake.ob_user()

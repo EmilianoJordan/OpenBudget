@@ -20,7 +20,7 @@ from tests.helpers import fake
 
 @pytest.fixture(scope='session')
 def app():
-    # Clean up module space incase someone else didn't clean up after themselves.
+    # Clean up module space in case someone else didn't clean up after themselves.
     if 'budgeting.app' in sys.modules:
         del sys.modules['budgeting.app']
 
@@ -46,6 +46,7 @@ def db(app, tmpdir_factory):
     yield database
     database.session.close()
     database.drop_all()
+
 
 # @pytest.fixture(scope='session')
 
@@ -94,8 +95,6 @@ def user_generator(db):
             user_model.confirmed = confirmed
             db.session.add(user_model)
             _user_dict.setdefault(key, []).append(user)
-
-
 
         db.session.commit()
 

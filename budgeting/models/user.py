@@ -6,7 +6,6 @@ Author: Emiliano Jordan,
         Most other things I'm @emilianojordan
 """
 import json
-from typing import List
 
 from flask import current_app, render_template
 from itsdangerous import (TimedJSONWebSignatureSerializer as Serializer,
@@ -14,10 +13,10 @@ from itsdangerous import (TimedJSONWebSignatureSerializer as Serializer,
 from typing import Dict
 from werkzeug.security import generate_password_hash, check_password_hash
 
-
-from ..app import db
+from budgeting.app import db
 from budgeting.app.email import send_email
-from .permissions import BasicUserRoles, UserPermissions
+from budgeting.models import Email
+from budgeting.models.permissions import BasicUserRoles, UserPermissions
 
 
 class User(db.Model):
@@ -29,7 +28,7 @@ class User(db.Model):
     confirmed = db.Column(db.Boolean, default=False)
     _permissions = db.Column(db.String, nullable=False)
     deleted = db.Column(db.Boolean, default=False)
-    emails = db.relationship("Email", backref="user", cascade="all, delete-orphan")
+    emails = db.relationship("Email", backref="user", cascade="all, delete-orphan, delete")
 
     def __init__(self,
                  username=None,
@@ -37,10 +36,11 @@ class User(db.Model):
                  password=None,
                  confirmed=False,
                  permissions=BasicUserRoles.USER,
-                 deleted = False):
+                 deleted=False):
 
         self.username = username
         self.email = email
+        self.emails = [Email(email)]
         if password:
             self.password = password
         self.confirmed = confirmed
@@ -134,13 +134,14 @@ class User(db.Model):
 
         return data
 
-    def send_confirm_account_email(self, email:str = ''):
+    def send_confirm_email(self, email: "Email" = None):
+
         send_email(
             f'{self.username}, Verify Your Email Address',
-            [self.email if email == '' else email],
-            render_template('user_confirm_email.txt', user=self),
-            render_template('user_confirm_email.html', user=self),
+            [self.email if email is None else email.email],
+            render_template('confirm_email.txt', user=self),
+            render_template('confirm_email.html', user=self),
         )
 
-    def send_account_exists_email(self):
+    def email_account_exists(self):
         pass

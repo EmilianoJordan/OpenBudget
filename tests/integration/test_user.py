@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 from flask import url_for
 import pytest
 
-from budgeting.models import User
+from budgeting.models import User, Email
 from budgeting.models.permissions import BasicUserRoles
 from budgeting.app import mail
 
@@ -441,7 +441,7 @@ class TestUserPut:
 
 class TestUserDelete:
 
-    def test_user_put(self, client, db, user, get_auth_headers):
+    def test_user_put(self, client, user, get_auth_headers):
         u = User.query.filter_by(email=user['email']).first()
         uid = u.id
 
@@ -451,6 +451,6 @@ class TestUserDelete:
         )
 
         assert r.status_code == 204
-
         assert User.query.filter_by(email=user['email']).first() is None
+        assert Email.query.filter_by(email=user['email']).first() is None
         assert User.query.filter_by(id=uid).first() is None
