@@ -43,7 +43,7 @@ class User(db.Model):
         self.emails = [Email(email)]
         if password:
             self.password = password
-        self.confirmed = confirmed
+        self._confirmed = confirmed
         self._permissions = json.dumps(permissions)
         self.deleted = deleted
 

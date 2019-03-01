@@ -5,7 +5,7 @@ Author: Emiliano Jordan,
         https://www.linkedin.com/in/emilianojordan/,
         Most other things I'm @emilianojordan
 """
-from flask import jsonify, request, url_for, g
+from flask import url_for, g
 from flask_restful import Resource, reqparse, fields, marshal_with
 from sqlalchemy.orm.session import sessionmaker
 from werkzeug.exceptions import BadRequest
@@ -25,7 +25,8 @@ user_fields = {
     'id': fields.Integer,
     'username': fields.String,
     'default_email': fields.String,
-    'emails': fields.List(fields.Nested(email_fields))
+    'emails': fields.List(fields.Nested(email_fields)),
+    'confirmed': fields.Boolean
 }
 
 
@@ -51,21 +52,22 @@ class UserAPI(Resource):
         :return:
         :rtype:
         """
-        user = User.query.get_or_404(uid)
-        if g.current_user == user:
-            return user.to_dict()
-        return not_found()
-
+        if g.current_user.id == uid:
+            return g.current_user.to_dict()
+        return not_found('User not found')
 
     def put(self, uid):
 
-        u: User = User.query.filter_by(id=uid).first()
-
         # Validate the user to be edited is the same as the authenticated user.
-        if (u != g.current_user
+        if (uid != g.current_user.id
                 and not g.current_user.employee
                 and not g.current_user.employee_admin):
             bad_request("Unable to modify a user other than the currently logged in user.")
+
+        if uid == g.current_user.id:
+            u = g.current_user
+        else:
+            u: User = User.query.filter_by(id=uid).first()
 
         try:
             data = self.rparse.parse_args()
@@ -84,15 +86,20 @@ class UserAPI(Resource):
         return '', 204
 
     def delete(self, uid):
-        u = User.query.filter_by(id=uid).first()
 
-        if u is None:
-            not_found('User not Found.')
-
-        if (u != g.current_user
+        if (uid != g.current_user.id
                 and not g.current_user.employee
                 and not g.current_user.employee_admin):
             bad_request("Unable to DELETE a user other than the currently logged in user.")
+
+        if uid == g.current_user.id:
+            u = g.current_user
+
+        else:
+            u: User = User.query.filter_by(id=uid).first()
+
+            if u is None:
+                not_found('User not Found.')
 
         # Need to make sure that the object is not bound to any other sessions or else the
         # db.session.delete() call will fail.
@@ -133,7 +140,7 @@ class UserListAPI(Resource):
                 url_for('api.user_list', page=page + 1, _external=True) if users.has_next else '',
             'prev':
                 url_for('api.user_list', page=page - 1, _external=True) if users.has_prev else '',
-            'users': users.items,
+            'users': [u.to_dict() for u in users.items],
         }
 
 
@@ -186,12 +193,13 @@ class UserVerify(Resource):
 
         u, data = User.verify_url_token(code)
 
-        if u is not None and u.id == uid:
-            u.confirmed = True
-            db.session.commit()
-            return
+        if u is None or u.id != uid:
+            bad_request('Could Not verify the user.')
 
-        bad_request('Could Not verify the user.')
+        u.confirmed = True
+        [setattr(e, 'confirmed', True) for e in u.emails if e.email == u.email]
+        db.session.commit()
+        return
 
 
 api.add_resource(UserAPI, '/user/<int:uid>', endpoint='user')

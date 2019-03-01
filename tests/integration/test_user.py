@@ -57,7 +57,7 @@ class TestUserProfile:
 
 class TestUserList:
 
-    def test_user_list_as_admin(self, client, employee_admin, user_generator, get_auth_headers):
+    def test_user_list_as_admin(self, client, employee_admin, get_auth_headers):
         """
         Verify that an admin or employee has rights to view the user
         list.
@@ -305,6 +305,11 @@ class TestCreateUser:
             u = User.query.filter_by(email=user_data['email']).one()
 
             assert u.confirmed
+
+            # assert that the default email is confirmed with the account.
+            for email in u.emails:
+                if email.email == u.email:
+                    assert email.confirmed
 
     def test_verify_email_bad_uid(self, client, json_headers, get_auth_headers):
         user_data = fake.ob_user()
