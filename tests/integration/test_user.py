@@ -32,7 +32,12 @@ class TestUserProfile:
         )
 
         assert r.status_code == 200
-        assert json.loads(r.get_data(as_text=True)) == u.to_dict()
+
+        # I'm doing it this way to assure that everything returned is
+        # Valid but allowing the response to omit some information.
+        user_dict = u.to_dict()
+        for key, val in json.loads(r.get_data(as_text=True)).items():
+            assert val == user_dict[key]
 
     def test_other_user_profile_page(self, client, user_generator, get_auth_headers):
         """

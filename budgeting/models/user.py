@@ -124,17 +124,16 @@ class User(db.Model):
         """
         return p in json.loads(self._permissions)
 
-    def to_dict(self, include_email=False):
-        data = {
+    def to_dict(self):
+        return {
             'id': self.id,
             'username': self.username,
+            'default_email': self.email,
+            'confirmed': self.confirmed,
+            'emails': [e.to_dict() for e in self.emails]
         }
-        if include_email:
-            data['email'] = self.email
 
-        return data
-
-    def send_confirm_email(self, email: "Email" = None):
+    def send_confirm_account(self, email: "Email" = None):
 
         send_email(
             f'{self.username}, Verify Your Email Address',

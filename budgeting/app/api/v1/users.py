@@ -16,6 +16,19 @@ from .errors import bad_request, not_found
 from . import api
 
 
+email_fields = {
+    'id': fields.Integer,
+    'email': fields.String,
+    'confirmed': fields.Boolean
+}
+user_fields = {
+    'id': fields.Integer,
+    'username': fields.String,
+    'default_email': fields.String,
+    'emails': fields.List(fields.Nested(email_fields))
+}
+
+
 class UserAPI(Resource):
 
     def __init__(self):
@@ -28,11 +41,21 @@ class UserAPI(Resource):
                                  help='No Username Provided.')
 
     @staticmethod
+    @marshal_with(user_fields)
     def get(uid):
+        """
+        Return the queried user.
+
+        :param uid:
+        :type uid:
+        :return:
+        :rtype:
+        """
         user = User.query.get_or_404(uid)
         if g.current_user == user:
-            return jsonify(user.to_dict())
+            return user.to_dict()
         return not_found()
+
 
     def put(self, uid):
 
@@ -50,7 +73,7 @@ class UserAPI(Resource):
             bad_request(' '.join([v for k, v in e.data['message'].items()]))
 
         if data['email'] is not None and u.email != data['email']:
-            u.send_confirm_email()
+            u.send_confirm_account()
             u.confirmed = False
             u.email = data['email']
 
@@ -84,10 +107,6 @@ class UserAPI(Resource):
         return '', 204
 
 
-user_fields = {
-    'id': fields.Integer,
-    'username': fields.String
-}
 user_list = {
     'page': fields.Integer,
     'per_page': fields.Integer,
@@ -119,7 +138,11 @@ class UserListAPI(Resource):
 
 
 class UserPost(Resource):
+    """
+    This class is for posting new users.
 
+    @TODO need to add the return path to the user settings and put methods
+    """
     def __init__(self):
         self.rparse = reqparse.RequestParser(bundle_errors=True)
         self.rparse.add_argument('email', type=str, required=True,
@@ -151,13 +174,16 @@ class UserPost(Resource):
         db.session.add(user)
         db.session.commit()
         assert len(user.emails) == 1
-        user.send_confirm_email()
+        user.send_confirm_account()
         return {'email': user.email}, 201
 
 
 class UserVerify(Resource):
-
+    """
+    Verifies codes that are sent to the user's email.
+    """
     def get(self, uid, code):
+
         u, data = User.verify_url_token(code)
 
         if u is not None and u.id == uid:

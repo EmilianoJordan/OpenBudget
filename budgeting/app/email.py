@@ -11,7 +11,6 @@ from . import mail
 from .decorators import thread
 
 
-
 @thread
 def _send_async_email(current_app, msg):
     with current_app.app_context():

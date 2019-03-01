@@ -17,3 +17,10 @@ class Email(db.Model):
 
     def __init__(self, email):
         self.email = email
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'email': self.email,
+            'confirmed': self.confirmed
+        }
